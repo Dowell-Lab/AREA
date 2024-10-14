@@ -37,12 +37,11 @@ def filter_comorbidities(binary_df, patient_comorbid_threshold, min_comorbids_pe
     n_comorbid = df_noname.sum(axis=0).to_frame()
     n_comorbid.columns = ["n"]
     n_comorbid["binary_attribute"] = n_comorbid.index
-    n_comorbid["percent"] = n_comorbid["n"] / total_samples
+    n_comorbid["percent"] = n_comorbid["n"]/total_samples
 
     # Filter comorbidities based on prevalence thresholds
-    n_comorbid_include = n_comorbid[
-        (n_comorbid["percent"] > min_comorbids_percent) & (n_comorbid["percent"] < max_comorbids_percent)
-    ]
+    n_comorbid_include = n_comorbid[n_comorbid["percent"]<max_comorbids_percent]
+    n_comorbid_include = n_comorbid_include[n_comorbid_include["percent"]>min_comorbids_percent]
     n_comorbid_exclude = n_comorbid[~n_comorbid.index.isin(n_comorbid_include.index)]
     
     return n_comorbid_include, n_comorbid_exclude
@@ -69,22 +68,41 @@ def filter_gene_expression(values_df, individual_expression_threshold, min_mean_
 
     return meansdf_include, meansdf_exclude
 
-def save_filtered_data(include_df, exclude_df, include_file, exclude_file):
+def save_filtered_data(n_comorbid_include, 
+                       n_comorbid_exclude, 
+                       include_binary_attribute_file, 
+                       exclude_binary_attribute_file, 
+                       meansdf_include, 
+                       meansdf_exclude, 
+                       include_values_file, 
+                       exclude_values_file):
     """ This function saves the filtered include/exclude data to CSV files in the user defined directory. """
-    # Save include data
-    if not os.access(os.path.dirname(include_file), os.W_OK):
-        raise PermissionError(f"Cannot write to directory '{include_file}'. Did you designate the ouput directoty and filename correctly?.")
+    # Save include comorbid data
+    if not os.access(os.path.dirname(include_binary_attribute_file), os.W_OK):
+        raise PermissionError(f"Cannot write to directory '{include_binary_attribute_file}'. Did you designate the ouput directoty and filename correctly?.")
+    outdir = include_binary_attribute_file
+    n_comorbid_include[["binary_attribute"]].to_csv(outdir, header=False, index=False)
+    print(f"Included comorbid data saved to {include_binary_attribute_file}")
+    # Save excluded comorbid data
+    if not os.access(os.path.dirname(exclude_binary_attribute_file), os.W_OK):
+        raise PermissionError(f"Cannot write to directory '{exclude_binary_attribute_file}'. Did you designate the ouput directoty and filename correctly?.")
+    outdir = exclude_binary_attribute_file
+    n_comorbid_exclude[["binary_attribute"]].to_csv(outdir, header=False, index=False)
+    print(f"Excluded comorbid data saved to {exclude_binary_attribute_file}")
     
-    include_df[["binary_attribute"]].to_csv(include_file, header=False, index=False)
-    print(f"Included data saved to {include_file}")
+    #save included expression data
+    if not os.access(os.path.dirname(include_values_file), os.W_OK):
+        raise PermissionError(f"Cannot write to directory '{include_values_file}'. Did you designate the ouput directoty and filename correctly?")
+    outdir = include_values_file
+    meansdf_include[["valuename"]].to_csv(outdir, header=False, index=False)
+    print(f"Included comorbid data saved to {include_values_file}")
+    #save excluded expression data
+    if not os.access(os.path.dirname(exclude_values_file), os.W_OK):
+        raise PermissionError(f"Cannot write to directory '{exclude_values_file}'. Did you designate the ouput directoty and filename correctly for the excluded genes file?")
+    outdir = exclude_values_file
+    meansdf_exclude[["valuename"]].to_csv(outdir, header=False, index=False)
+    print(f"Excluded comorbid data saved to {exclude_values_file}")
 
-    # Save exclude data
-    if not os.access(os.path.dirname(exclude_file), os.W_OK):
-        raise PermissionError(f"Cannot write to directory '{exclude_file}'. Did you designate the ouput directoty and filename correctly?.")
-    
-    exclude_df[["binary_attribute"]].to_csv(exclude_file, header=False, index=False)
-    print(f"Excluded data saved to {exclude_file}")
-    
     
 def run_filtering(patient_comorbid_threshold, 
                   min_comorbids_percent, 
@@ -102,31 +120,42 @@ def run_filtering(patient_comorbid_threshold,
     """ This is the main function that runs comorbidity and gene expression filtering. """
     try:
         # Validate input files and load data
-        binary_df, values_df = validate_input_files(values_file, binary_attribute_file, sample_name)
+        binary_df, values_df = validate_input_files(values_file, 
+                                                    binary_attribute_file, 
+                                                    sample_name)
 
         # Comorbidity filtering
-        n_comorbid_include, n_comorbid_exclude = filter_comorbidities(
-            binary_df, patient_comorbid_threshold, min_comorbids_percent, max_comorbid_percent, sample_name
-        )
+        n_comorbid_include, n_comorbid_exclude = filter_comorbidities(binary_df, 
+                                                                      patient_comorbid_threshold, 
+                                                                      min_comorbids_percent, 
+                                                                      max_comorbids_percent, 
+                                                                      sample_name)
+        
         print("Passing comorbidities based on filtering thresholds:")
         print(n_comorbid_include)
         print("Excluded comorbidities based on filtering thresholds:")
         print(n_comorbid_exclude)
 
-        # Save filtered comorbidities
-        save_filtered_data(n_comorbid_include, n_comorbid_exclude, include_binary_attribute_file, exclude_binary_attribute_file)
-
         # Gene expression filtering
-        meansdf_include, meansdf_exclude = filter_gene_expression(
-            values_df, individual_expression_threshold, min_mean_expression, sample_name
-        )
+        meansdf_include, meansdf_exclude = filter_gene_expression(values_df, 
+                                                                  individual_expression_threshold, 
+                                                                  min_mean_expression, 
+                                                                  sample_name)
+        
         print("Passing genes based on mean threshold for expression:")
         print(meansdf_include)
         print("Excluded genes based on mean threshold for expression:")
         print(meansdf_exclude)
-
-        # Save filtered gene expressions
-        save_filtered_data(meansdf_include, meansdf_exclude, include_values_file, exclude_values_file)
+        
+        # Save filtered comorbidities
+        save_filtered_data(n_comorbid_include, 
+                           n_comorbid_exclude, 
+                           include_binary_attribute_file, 
+                           exclude_binary_attribute_file, 
+                           meansdf_include, 
+                           meansdf_exclude, 
+                           include_values_file, 
+                           exclude_values_file)
     
     except Exception as e:
         print(f"Error occurred during filtering: {e}")
