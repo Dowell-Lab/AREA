@@ -1,3 +1,5 @@
+## the original filtering function, not very modular but works ##
+
 import pandas as pd
 import os
 
