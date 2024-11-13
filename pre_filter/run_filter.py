@@ -1,5 +1,5 @@
 import argparse
-from filter import run_filtering
+from filter_functions import run_filtering
 
 def main():
     # Set up argument parser
@@ -26,6 +26,10 @@ def main():
                         help='Name/location of file to contain filtered list of gene names.')
     parser.add_argument('-ibaf', '--include_binary_attribute_file', type=str, 
                         help='Name/location of file to contain filtered list of cormorbidities.')
+    parser.add_argument('-ebaf', '--exclude_binary_attribute_file', type=str,
+                        help='Name/location of file to contain list of cormorbidities that were excluded based on filtering.')
+    parser.add_argument('-evf', '--exclude_values_file', type=str, 
+                        help='Name/location of file to contain list of gene names that were excluded based on filtering.')
 
     
 
@@ -33,16 +37,22 @@ def main():
     args = parser.parse_args()
     
     # Call the filtering function with the provided arguments
-    run_filtering(args.patient_comorbid_threshold, args.min_comorbids_percent, args.max_comorbids_percent, 
-                  args.min_mean_expression, args.individual_expression_threshold,
-                  args.values_file, args.binary_attribute_file, args.sample_name, 
-                  args.include_values_file, args.include_binary_attribute_file)
+    run_filtering(args.patient_comorbid_threshold, 
+                  args.min_comorbids_percent, 
+                  args.max_comorbids_percent,
+                  args.individual_expression_threshold,
+                  args.min_mean_expression,
+                  args.values_file, 
+                  args.binary_attribute_file, 
+                  args.sample_name, 
+                  args.include_values_file, 
+                  args.include_binary_attribute_file, 
+                  args.exclude_values_file, 
+                  args.exclude_binary_attribute_file)
 
 if __name__ == "__main__":
     main()
 
 
     
-## next ##
-# have argeparse treat as either float OR and integer
-#
+## next... ##

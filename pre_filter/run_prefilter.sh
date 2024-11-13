@@ -20,6 +20,8 @@ values_file=${indir}value_expression.csv
 binary_attribute_file=${indir}comorbid_file.csv
 include_values_file=${outdir}include_values_long.csv
 include_binary_attribute_file=${outdir}include_binary_attribute_long.csv
+exclude_values_file=${outdir}exclude_values_long.csv
+exclude_binary_attribute_file=${outdir}exclude_binary_attribute_long.csv
 
 mkdir -p $outdir
 
@@ -37,10 +39,12 @@ python3 run_filter.py \
     -vf $values_file \
     -baf $binary_attribute_file \
     --include_values_file $include_values_file \
+    --exclude_values_file $exclude_values_file \
     --include_binary_attribute_file $include_binary_attribute_file \
+    --exclude_binary_attribute_file $exclude_binary_attribute_file \
     --patient_comorbid_threshold 1 \
-    --min_comorbids_percent 0.1 \
-    --max_comorbids_percent 0.9 \
+    --min_comorbids_percent 0.05 \
+    --max_comorbids_percent 0.95 \
     --min_mean_expression 0.1 \
     --individual_expression_threshold 10
 

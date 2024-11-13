@@ -363,15 +363,16 @@ def psea_heart(gene_cormorbid_data, outfilename):
     elif is_unique(gene_cormorbid_data["binary_attribute"])==True:
         return "ba_or_value_are_all_identical", "excluded_by_psea"
     else:
-    	value = gene_cormorbid_data["value"].to_list()
-    	binary_attribute = gene_cormorbid_data["binary_attribute"].to_list()
-    	df = gene_cormorbid_data[["sample", "value", "binary_attribute"]]
-    	df = df.sort_values("value")
-    	thiscomorbidity_binary = df["binary_attribute"].to_list()
-    	actualES_norm, normalized_pc_score_norm, thistrend_norm, thiscumscore_norm = pcea_score_norm(thiscomorbidity_binary)
-    	simES_norm = permute_pcea_norm(normalized_pc_score_norm, permutations=1000)
-    	onegeneNES, onegenep = calculateNESpval(actualES_norm, simES_norm)
-    	return onegeneNES, onegenep
+        value = gene_cormorbid_data["value"].to_list()
+        binary_attribute = gene_cormorbid_data["binary_attribute"].to_list()
+        df = gene_cormorbid_data[["sample", "value", "binary_attribute"]]
+        df = df.sample(frac=1).reset_index(drop=True)
+        df = df.sort_values("value")
+        thiscomorbidity_binary = df["binary_attribute"].to_list()
+        actualES_norm, normalized_pc_score_norm, thistrend_norm, thiscumscore_norm = pcea_score_norm(thiscomorbidity_binary)
+        simES_norm = permute_pcea_norm(normalized_pc_score_norm, permutations=1000)
+        onegeneNES, onegenep = calculateNESpval(actualES_norm, simES_norm)
+        return onegeneNES, onegenep
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description='Run psea on a single set of values and binary attributes')
