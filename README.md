@@ -28,7 +28,7 @@ One of the CSV files needs to contain binary attributes. In our case, the binary
 
 ### Value file
 
-The other files must have columns that can be ranked by the values within the column. In our example case, the value file has genes and the expression level of those genes in each patient. 
+The other file must have columns that can be ranked by the values within the column. In our example case, the value file has genes and the expression level of those genes in each patient. 
 
 ![alt text](https://github.com/Dowell-Lab/psea/blob/main/src/images/value_df.png "Value csv")
 
