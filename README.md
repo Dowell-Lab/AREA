@@ -62,4 +62,4 @@ We created simulated data similar to our data in the notebook_examples//simulate
 
 ## Special thank you to the Human Trisomy Project and the INCLUDE Data Coordinating Center
 
-The data used in our example code can be sourced from the INCLUDE Data Hub at https://portal.includedcc.org/, and anyone who would like to use the original data can register for an account on the data hub. Data used from the Human Trisomy Project was converted from kallisto to deseq2 normalized counts using tximport.
+The data used in our example code can be sourced from the INCLUDE Data Hub at https://portal.includedcc.org/ and anyone who would like to use the original data can register for an account on the data hub. Data used from the Human Trisomy Project was converted from kallisto to deseq2 normalized counts using tximport.
