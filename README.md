@@ -53,4 +53,6 @@ slurm_runpsea_fullsimulatedfiles.sh
 To aviod genes and comorbdities that can not be called as significant anyway, we decided to create simulated data and discover what pattens PSEA is best at finding. 
 We created simulated data similar to our data in the notebook_examples//simulateddata-bothdirs.ipynb. This code creates a certain number of simulated genes based on the expression of real genes. We then create comorbiditeis that are bais in a sub group of people with higher or lower expression. 
 
+## Special thank you to the INCLUDE Human Trisomy Project
 
+This data was sourced from the INCLUDE Data Hub at https://portal.includedcc.org/, and anyone that would like to use the original data can register for an account on the data hub.
