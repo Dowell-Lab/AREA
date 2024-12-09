@@ -37,11 +37,16 @@ The other file must have columns that can be ranked by the values within the col
 The output file has each binary attribute and value type listed in pairs. The rest of the row has the scores for this pair. For instance, at the top of the table below, X and Y are shown. They have a NES that says -Y which means that this gene is higher in the people with Y.
 ![alt text](https://github.com/Dowell-Lab/psea/blob/main/src/images/results_example_NES.png "results example")
 
+### Running pre-filter
+
+In this repository we have included a filtering bash script that 
+
+
 ### Filtering the output
 
 The items in the output file have NOT been filtered for significance. To filter for significance you must pick an adjusted p-value column (we include 4 to choose from) and filter out values less than your custom cutoff. 
 
-From the outset, it is unclear which comorbiditys will be linked to which genes in our data set. But, it is likley some genes won't be linked becuase there gene expression is not replicable. Similarly, if a comorbidity is present in all patients or in zero patients, is it unlikely to be significant in AREA. Therefore, we chose not to run these genes and comrbidities thorugh the program. If we did, we would would have to multiple hypothesis correct for each test. ** is this right ** 
+From the outset, it is unclear which comorbiditys will be linked to which genes in our data set. But, it is likley some genes won't be linked becuase there gene expression is not replicable. Similarly, if a comorbidity is present in all patients or in zero patients, is it unlikely to be significant in AREA. Therefore, we chose not to run these genes and comrbidities thorugh the program. If we did, we would would have to multiple hypothesis correct for each test. ** need to change this ** 
 
 ## Running AREA
 
@@ -49,7 +54,7 @@ To run AREA, look at the examples in the examples folder.
 
 The example file slurm_runpsea_fullinputfiles.sh will run AREA on a supercomputer with slurm installed. It will run using the data in test data. You can modify this script to run your own data. 
 
-Often a user will not want to run all data through AREA. As mentioned before, if a binary attribute is true of all samples or no samples it is silly to run AREA. Therefore we have option --include flags. Those flags take in a file like the file "include_binary_attribute_short.csv" which has a list of binary_attribute columns from the binary_attributes file. The rest of the binary_attribute file will be marked as "exclude" in the output file. 
+*** I need to change this*** Often a user will not want to run all data through AREA. As mentioned before, if a binary attribute is true of all samples or no samples it is silly to run AREA. Therefore we have option --include flags. Those flags take in a file like the file "include_binary_attribute_short.csv" which has a list of binary_attribute columns from the binary_attributes file. The rest of the binary_attribute file will be marked as "exclude" in the output file. 
 To run the filtered version of AREA use the example file slurm_runpsea_fullinputfiles_filterviainclude.sh.
 
 Finally, we include a run file for simulated data. See more in the description of Simulated data below. 
