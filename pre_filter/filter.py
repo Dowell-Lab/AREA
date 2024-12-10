@@ -19,7 +19,7 @@ def run_filtering(patient_comorbid_threshold,
     """
     
     This function reads in the cormorbidity designation and gene expression data files, 
-    and filters them based on user defined inputs. It then outputs lists of filtered Genes and Comorbidities that can be used for PSEA. 
+    and filters them based on user defined inputs. It then outputs lists of filtered Genes and Comorbidities that can be used for AREA. 
     It requires the following arguments: 
     
     - patient_comorbid_threshold = Threshold for minimum number of comorbidities a patient should have to be included. 
