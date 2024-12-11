@@ -28,6 +28,13 @@ echo $bianary_attribute_file
 echo $outdirname
 
 
-python3 ../src/psea_wrapper.py -od $outdirname -sn $sample_name -vf $values_file -baf $bianary_attribute_file --include_values_file $include_values_file --include_bianary_attribute_file $include_binary_attribute_file --processes 60
+python3 ../src/psea_wrapper.pyc \
+ -od $outdirname \
+ -sn $sample_name \
+ -vf $values_file \
+ -baf $bianary_attribute_file \
+ -ivf $include_values_file \
+ -ibaf $include_binary_attribute_file \
+ --processes 60
 
 

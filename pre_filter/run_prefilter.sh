@@ -1,5 +1,5 @@
 #!/bin/bash 
-#SBATCH --job-name=filter_psea # Job name
+#SBATCH --job-name=filter # Job name
 #SBATCH --mail-type=ALL # Mail events (NONE, BEGIN, END, FAIL, ALL)
 #SBATCH --mail-user=ozeroff@colorado.edu # Where to send mail
 #SBATCH --nodes=1 # Run on a single node
