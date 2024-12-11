@@ -45,10 +45,10 @@ python3 run_filter.py \
     --patient_comorbid_threshold 1 \
     --min_comorbids_percent 0.05 \
     --max_comorbids_percent 0.95 \
-    --min_mean_expression 0.1 \
+    --min_mean_expression 1.0 \
     --individual_expression_threshold 10
-
-
+    
+# 0.1 was the original for min mean, trying 1.0
 # In standard output check if the script completed successfully
 if [ $? -eq 0 ]; then
     echo "Filtering completed successfully at: $(date '+%Y-%m-%d %H:%M:%S')"
