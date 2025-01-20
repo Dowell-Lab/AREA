@@ -18,8 +18,8 @@ sample_name=Patient
 values_file=${indir}value_expression.csv
 bianary_attribute_file=${indir}comorbid_file.csv
 outdirname=$HOME/ChrisO/AREA_OUTPUT/
-include_values_file=${indir}include_values_long.csv # in this example we are looking at the included genes
-include_binary_attribute_file=${indir}include_binary_attribute_long.csv # and binary atribute file values after filtering, not the excluded ones
+include_values_file=${indir}include_values_long.csv # in this example we are looking at the included genes...
+include_binary_attribute_file=${indir}include_binary_attribute_long.csv # ...and binary atribute file values after filtering, not the excluded ones
 #exclude_values_file=${indir}exclude_values_long.csv
 #exclude_binary_attribute_file=${indir}exclude_binary_attribute_long.csv
 
