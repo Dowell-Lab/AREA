@@ -278,16 +278,17 @@ def calculateNESpval(actualES, simES):
     if actualES < 0:
             simESsubset = [x for x in simES if x < 0]
             mu = np.mean(simESsubset)
-            NES = -(actualES/mu)
+            NES = actualES/mu
             sigma = np.std(simESsubset)
             p = stats.norm.cdf(actualES, mu, sigma)
     else:
             simESsubset = [x for x in simES if x > 0]
             mu = np.mean(simESsubset)
-            NES = actualES/mu
+            NES = -(actualES/mu)
             sigma = np.std(simESsubset)
             p = 1-stats.norm.cdf(actualES, mu, sigma)
     return NES, p
+
 
 def plot_pcea(cumscore, trend, ranks, comorbidity_binary, sim_pcea, pcea, n_bins = 100):
     
