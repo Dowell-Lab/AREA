@@ -82,11 +82,13 @@ def is_unique(s):
     a = s.to_numpy() # s.values (pandas<0.24)
     return (a[0] == a).all()
 
-def pre_organize_run(outdir, orgfile, commoncolumn, value_file, binary_attribute_file, keepbools_file=None, keepranks_file=None, ignorebas_file=None, ignorevalues_file=None,verbose=False):
+def pre_organize_run(outdir, orgfile, commoncolumn, value_file, boolean_attribute_file, keepbools_file=None, keepranks_file=None, ignorebas_file=None, ignorevalues_file=None,verbose=False):
     #read the files
-    badf = pd.read_csv(binary_attribute_file, index_col=0)
+    badf = pd.read_csv(boolean_attribute_file, index_col=0)
     rankorderdf = pd.read_csv(value_file, index_col=0)
-
+    if args.verbose:
+        print("bool columns at begining", len(badf.columns), badf.columns)
+        print("rank columns at begining", len(rankorderdf.columns), rankorderdf.columns)
     #gather all pairs
     valuelabels = [colname for colname in rankorderdf.columns if colname!=commoncolumn]
     balabels = [colname for colname in badf.columns if colname!=commoncolumn]
@@ -116,14 +118,14 @@ def pre_organize_run(outdir, orgfile, commoncolumn, value_file, binary_attribute
     torundf.to_csv(outdir+orgfile)
 
 
-def process_balabel(balabel, todolist, outdir, commoncolumn, value_file, binary_attribute_file,keepsamples):
+def process_balabel(balabel, todolist, outdir, commoncolumn, value_file, boolean_attribute_file,keepsamples):
     '''Process a single balabel and return the results'''
     todolistthisba = todolist[todolist["balabel"] == balabel]
     valuecols = todolistthisba["valuelabel"].to_list()
-    baNESpvals = run_a_ba(balabel, valuecols, outdir, commoncolumn, value_file, binary_attribute_file,keepsamples)
+    baNESpvals = run_a_ba(balabel, valuecols, outdir, commoncolumn, value_file, boolean_attribute_file,keepsamples)
     return baNESpvals
 
-def org_to_pval(outdir, orgfile, commoncolumn, value_file, binary_attribute_file, keepsamples, n_processes=4):
+def org_to_pval(outdir, orgfile, commoncolumn, value_file, boolean_attribute_file, keepsamples, n_processes=4):
     todolist = pd.read_csv(outdir + orgfile)
     # Remove things we are not going to run because of ignores or being non-unique
     todolist = todolist[todolist["plan"] == "run_area"]
@@ -131,7 +133,7 @@ def org_to_pval(outdir, orgfile, commoncolumn, value_file, binary_attribute_file
     # Set up multiprocessing
     with Pool(processes=n_processes) as pool:
         # Use map to apply the `process_balabel` function in parallel
-        results = pool.starmap(process_balabel, [(balabel, todolist, outdir, commoncolumn, value_file, binary_attribute_file,keepsamples) for balabel in todolist["balabel"].unique()])
+        results = pool.starmap(process_balabel, [(balabel, todolist, outdir, commoncolumn, value_file, boolean_attribute_file,keepsamples) for balabel in todolist["balabel"].unique()])
     
     # Collect the results into one DataFrame
     collectdfs = pd.concat(results, ignore_index=True)
@@ -146,8 +148,8 @@ def pval_to_adjpvals(outdir, orgfile):
     finaldf.to_csv(outdir + orgfile+'.adjpval.csv', index=False)
 
 
-def run_a_ba(ba,valuecols, outdir, commoncolumn, value_file, binary_attribute_file, keepsamples):
-    badf = pd.read_csv(binary_attribute_file, index_col=0)
+def run_a_ba(ba,valuecols, outdir, commoncolumn, value_file, boolean_attribute_file, keepsamples):
+    badf = pd.read_csv(boolean_attribute_file, index_col=0)
     rankorderdf = pd.read_csv(value_file, index_col=0)
     bacols_common = [ba, commoncolumn]
     valuecols_common = valuecols+[commoncolumn]
@@ -167,9 +169,9 @@ def run_a_ba(ba,valuecols, outdir, commoncolumn, value_file, binary_attribute_fi
         onegeneNES, onegenepval = calculateNESpval(actualES_norm, simES_norm)
         line = [colname, onegeneNES, onegenepval]
         lines.append(line)
-    baNESpvals = pd.DataFrame(lines, columns = ["value","NES", "pval"])
-    baNESpvals["binary_attribute"]=ba
-    baNESpvals = baNESpvals[["binary_attribute", "value","NES", "pval"]]
+    baNESpvals = pd.DataFrame(lines, columns = ["ranked_by","NES", "pval"])
+    baNESpvals["boolean_attribute"]=ba
+    baNESpvals = baNESpvals[["boolean_attribute", "ranked_by","NES", "pval"]]
     return baNESpvals
 
 
@@ -205,13 +207,13 @@ if __name__ == '__main__':
     
     # Core AREA arguments
     parser.add_argument('-baf', '--boolean_file', required=True)
-    parser.add_argument('-vf', '--rank_file', required=True)
+    parser.add_argument('-rf', '--rank_file', required=True)
     parser.add_argument('-cc', '--common_column_name', required=True)
     parser.add_argument('-od', '--outdir', required=True)
     parser.add_argument('-p', '--processes', default=4, type=int)
-    parser.add_argument('-ivf', '--include_rank_file_columns', default=False, help="txt file with list of columns to use from the rank file")
-    parser.add_argument('-ibaf', '--include_boolean_file_columns', default=False, help="txt file with list of columns to use from the boolean file")
-    parser.add_argument('-ibaf', '--include_sample_file', default=False, help="txt file with list samples in the common column")   
+    parser.add_argument('-irc', '--include_rank_file_columns', default=False, help="txt file with list of columns to use from the rank file")
+    parser.add_argument('-ibac', '--include_boolean_file_columns', default=False, help="txt file with list of columns to use from the boolean file")
+    parser.add_argument('-is', '--include_sample_file', default=False, help="txt file with list samples in the common column")   
     parser.add_argument("--gpu",action="store_true",  # sets gpu=True if flag is provided
     default=False,        # default if not provided
     help="Use GPU if available"
@@ -240,93 +242,92 @@ if __name__ == '__main__':
     orgfile = "area_scores_" + timestr
     
     # Extract arguments
-    binary_attribute_file = args.boolean_file
+    boolean_attribute_file = args.boolean_file
     value_file = args.rank_file
     outdir = args.outdir
     commoncolumn = args.common_column_name
     n_processes = args.processes
-    usegpu = args.use_gpu
+    usegpu = args.gpu
     
     # Ensure output directory exists
     os.makedirs(outdir, exist_ok=True)
 
     #If gpu flag
     if usegpu==True:
-	try:
-    		import cupy as cp
-    		gpu_available = True
-    		array_lib = cp
-    		print("GPU available, using cupy")
-	except ImportError:
-    		import numpy as np
-    		gpu_available = False
-    		array_lib = np
-    		print("GPU not available, using CPU")
+        try:
+            import cupy as cp
+            gpu_available = True
+            array_lib = cp
+            print("GPU available, using cupy")
+        except ImportError:
+            gpu_available = False
+            array_lib = np
+            print("GPU not available, using CPU")
     
     # Handle include/exclude files
-    keepranks_file = args.include_rank_file if args.include_rank_file != False else None
-    keepbools_file = args.include_boolean_file if args.include_boolean_file != False else None
+    keepranks_file = args.include_rank_file_columns if args.include_rank_file_columns != False else None
+    keepbools_file = args.include_boolean_file_columns if args.include_boolean_file_columns != False else None
     keepsample_file = args.include_sample_file if args.include_sample_file != False else None
     if keepsample_file==None:
-	   keepsamples = []
+        keepsamples = []
     else:
         keepsampledf = pd.read_csv(keepsample_file, names=[commoncolumn])
         keepsamples = keepsampledf[commoncolumn].to_list()
 
  
     # Run prefiltering if enabled and available
-    if PREFILTER_AVAILABLE and hasattr(args, 'enable_prefilter') and args.enable_prefilter:
-        print("=== PREFILTERING STAGE ===")
+    #if PREFILTER_AVAILABLE and hasattr(args, 'enable_prefilter') and args.enable_prefilter:
+    #    print("=== PREFILTERING STAGE ===")
         
         # Generate filter file names
-        prefilter_dir = os.path.join(outdir, "prefilter_" + timestr + "/")
-        include_values_file = os.path.join(prefilter_dir, "include_values.csv")
-        include_binary_attribute_file = os.path.join(prefilter_dir, "include_binary_attributes.csv")
-        exclude_values_file = os.path.join(prefilter_dir, "exclude_values.csv")
-        exclude_binary_attribute_file = os.path.join(prefilter_dir, "exclude_binary_attributes.csv")
-        
-        try:
+    #    prefilter_dir = os.path.join(outdir, "prefilter_" + timestr + "/")
+    #    include_values_file = os.path.join(prefilter_dir, "include_values.csv")
+    #    include_boolean_attribute_file = os.path.join(prefilter_dir, "include_boolean_attributes.csv")
+    #    exclude_values_file = os.path.join(prefilter_dir, "exclude_values.csv")
+    #    exclude_boolean_attribute_file = os.path.join(prefilter_dir, "exclude_boolean_attributes.csv")
+    #    
+    #    try:
             # Run prefiltering using imported function
-            run_filtering(
-                patient_comorbid_threshold=args.patient_comorbid_threshold,
-                min_comorbids_percent=args.min_comorbids_percent,
-                max_comorbids_percent=args.max_comorbids_percent,
-                individual_expression_threshold=args.individual_expression_threshold,
-                min_mean_expression=args.min_mean_expression,
-                values_file=value_file,
-                binary_attribute_file=binary_attribute_file,
-                sample_name=commoncolumn,
-                include_values_file=include_values_file,
-                include_binary_attribute_file=include_binary_attribute_file,
-                exclude_values_file=exclude_values_file,
-                exclude_binary_attribute_file=exclude_binary_attribute_file
-            )
+    #        run_filtering(
+    #            patient_comorbid_threshold=args.patient_comorbid_threshold,
+    #            min_comorbids_percent=args.min_comorbids_percent,
+    #            max_comorbids_percent=args.max_comorbids_percent,
+    #            individual_expression_threshold=args.individual_expression_threshold,
+    #            min_mean_expression=args.min_mean_expression,
+    #            values_file=value_file,
+    #            boolean_attribute_file=boolean_attribute_file,
+    #            sample_name=commoncolumn,
+    #            include_values_file=include_values_file,
+    #            include_boolean_attribute_file=include_boolean_attribute_file,
+    #            exclude_values_file=exclude_values_file,
+    #            exclude_boolean_attribute_file=exclude_boolean_attribute_file
+    #        )
             
             # Use prefiltered files for subsequent analysis
-            keepranks_file = include_values_file
-            keepbools_file = include_binary_attribute_file
-            print(f"Prefiltering completed. Using filtered files:")
-            print(f"  Values: {keepranks_file}")
-            print(f"  Binary attributes: {keepbools_file}")
+    #        keepranks_file = include_values_file
+    #        keepbools_file = include_boolean_attribute_file
+    #        print(f"Prefiltering completed. Using filtered files:")
+    #        print(f"  Values: {keepranks_file}")
+    #        print(f"  Binary attributes: {keepbools_file}")
             
-        except Exception as e:
-            print(f"Prefiltering failed: {e}")
-            print("Continuing without prefiltering.")
+    #    except Exception as e:
+    #        print(f"Prefiltering failed: {e}")
+    #        print("Continuing without prefiltering.")
     
-    elif hasattr(args, 'enable_prefilter') and args.enable_prefilter and not PREFILTER_AVAILABLE:
-        print("Warning: Prefiltering requested but filter_functions module not available.")
-        print("Please ensure filter_functions.py is in the same directory.")
-        print("Continuing without prefiltering.")
+    #elif hasattr(args, 'enable_prefilter') and args.enable_prefilter and not PREFILTER_AVAILABLE:
+    #    print("Warning: Prefiltering requested but filter_functions module not available.")
+    #    print("Please ensure filter_functions.py is in the same directory.")
+    #    print("Continuing without prefiltering.")
     
     # Run main AREA analysis
     print("=== AREA ANALYSIS STAGE ===")
     
     # Fix the argument passing bug from original
-    pre_organize_run(outdir, orgfile, commoncolumn, value_file, binary_attribute_file, 
+    pre_organize_run(outdir, orgfile, commoncolumn, value_file, boolean_attribute_file, 
                      keepbools_file=keepbools_file, keepranks_file=keepranks_file, 
                      verbose=args.verbose)
     
-    org_to_pval(outdir, orgfile, commoncolumn, value_file, binary_attribute_file, keepsamples=keepsamples,n_processes=n_processes)
+    org_to_pval(outdir, orgfile, commoncolumn, value_file, boolean_attribute_file, keepsamples=keepsamples,n_processes=n_processes)
     pval_to_adjpvals(outdir, orgfile)
     
     print(f"AREA analysis completed. Results saved with prefix: {orgfile}")
