@@ -39,4 +39,3 @@ python3 ${path_to_area}AREA_core.py -od $outdirname -cc $commoncolumn -vf $value
 
 dt=$(date '+%d/%m/%Y %H:%M:%S');
 echo "$dt"
-
