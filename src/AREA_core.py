@@ -9,7 +9,6 @@ from statsmodels.stats.multitest import multipletests
 import scipy
 import time 
 from scipy import stats
-import numpy as np
 
 # Try to import prefilter functions if available
 #try:
@@ -20,13 +19,12 @@ import numpy as np
 #    print("Prefilter module not found. Prefiltering features disabled.")
 
 
-array_lib = np
 
 def area_score_norm(ar_ticks, verbose=False):
     '''Calculate the GSEA like enrichment score using the comorbidity
     occurance in the rank as our set'''
 
-    ar_score = array_lib.array([1 if i > 0 else 0 for i in ar_ticks])  # Use array_lib (either cp or np)
+    ar_score = array_lib.array([1 if i > 0 else 0 for i in ar_ticks])  # Use array_lib (either cp or array_lib)
     total = float(array_lib.sum(ar_score))  # Use array_lib sum
 
     binwidth = 1.0 / float(len(ar_score))
@@ -82,7 +80,11 @@ def is_unique(s):
     a = s.to_numpy() # s.values (pandas<0.24)
     return (a[0] == a).all()
 
-def pre_organize_run(outdir, orgfile, commoncolumn, value_file, boolean_attribute_file, keepbools_file=None, keepranks_file=None, ignorebas_file=None, ignorevalues_file=None,verbose=False):
+def pre_organize_run(outdir, orgfile, commoncolumn, value_file, boolean_attribute_file, use_gpu,keepbools_file=None, keepranks_file=None, ignorebas_file=None, ignorevalues_file=None,verbose=False):
+    if use_gpu:
+        import cupy as array_lib
+    else:
+        import numpy as array_lib
     #read the files
     badf = pd.read_csv(boolean_attribute_file, index_col=0)
     rankorderdf = pd.read_csv(value_file, index_col=0)
@@ -101,13 +103,13 @@ def pre_organize_run(outdir, orgfile, commoncolumn, value_file, boolean_attribut
         if verbose:
             print ("excluding attributes not in ", keepbools_file)
             print(keepba["keepba"])
-        torundf.loc[~torundf['balabel'].isin(keepba["keepba"].to_list()), 'plan'] = 'ignored due to user input not in keep file'
+        torundf.loc[~torundf['balabel'].isin(keepba["keepba"].to_list()), 'plan'] = 'ignored due to user iarray_libut not in keep file'
     if isinstance(keepranks_file, str):   
         keepvalue = pd.read_csv(keepranks_file, names=["keepvalue"])
         if verbose:
             print ("excluding values not in ", keepranks_file)
             print(keepvalue["keepvalue"])
-        torundf.loc[~torundf['valuelabel'].isin(keepvalue["keepvalue"].to_list()), 'plan'] = 'ignored due to user input not in keep file'
+        torundf.loc[~torundf['valuelabel'].isin(keepvalue["keepvalue"].to_list()), 'plan'] = 'ignored due to user iarray_libut not in keep file'
     for colname in valuelabels:
 	#I think this throw away both copys of a column if the name is there twice. Do we want to to that?
         if is_unique(rankorderdf[colname])==True:
@@ -125,7 +127,11 @@ def process_balabel(balabel, todolist, outdir, commoncolumn, value_file, boolean
     baNESpvals = run_a_ba(balabel, valuecols, outdir, commoncolumn, value_file, boolean_attribute_file,keepsamples)
     return baNESpvals
 
-def org_to_pval(outdir, orgfile, commoncolumn, value_file, boolean_attribute_file, keepsamples, n_processes=4):
+def org_to_pval(outdir, orgfile, commoncolumn, value_file, boolean_attribute_file, keepsamples, use_gpu,n_processes=4):
+    if use_gpu:
+        import cupy as array_lib
+    else:
+        import numpy as array_lib
     todolist = pd.read_csv(outdir + orgfile)
     # Remove things we are not going to run because of ignores or being non-unique
     todolist = todolist[todolist["plan"] == "run_area"]
@@ -142,7 +148,11 @@ def org_to_pval(outdir, orgfile, commoncolumn, value_file, boolean_attribute_fil
     collectdfs.to_csv(outdir + orgfile+'beforeadjpval.csv', index=False)
 
 
-def pval_to_adjpvals(outdir, orgfile):
+def pval_to_adjpvals(outdir, orgfile,use_gpu):
+    if use_gpu:
+        import cupy as array_lib
+    else:
+        import numpy as array_lib
     df = pd.read_csv(outdir + orgfile+'beforeadjpval.csv')
     finaldf = add_adj_pvals(df)
     finaldf.to_csv(outdir + orgfile+'.adjpval.csv', index=False)
@@ -214,10 +224,7 @@ if __name__ == '__main__':
     parser.add_argument('-irc', '--include_rank_file_columns', default=False, help="txt file with list of columns to use from the rank file")
     parser.add_argument('-ibac', '--include_boolean_file_columns', default=False, help="txt file with list of columns to use from the boolean file")
     parser.add_argument('-is', '--include_sample_file', default=False, help="txt file with list samples in the common column")   
-    parser.add_argument("--gpu",action="store_true",  # sets gpu=True if flag is provided
-    default=False,        # default if not provided
-    help="Use GPU if available"
-    )    
+    parser.add_argument('--gpu',action='store_true',help='Enable GPU acceleration if supported')
 
 #    # Optional prefiltering arguments (only available if prefilter module exists)
 #    if PREFILTER_AVAILABLE:
@@ -233,7 +240,7 @@ if __name__ == '__main__':
 #                            help='Minimum mean gene expression to retain gene (default: 1.0)')
 #        parser.add_argument('--individual_expression_threshold', type=int, default=10, 
 #                            help='Minimum individual expression threshold (default: 10)')
-    
+    print("Running AREA") 
     parser.add_argument('--verbose', action='store_true', 
                         help='Enable verbose output')
     
@@ -248,21 +255,19 @@ if __name__ == '__main__':
     commoncolumn = args.common_column_name
     n_processes = args.processes
     usegpu = args.gpu
-    
+    print("am I trying to use gpu?", usegpu)   
+ 
     # Ensure output directory exists
     os.makedirs(outdir, exist_ok=True)
 
     #If gpu flag
-    if usegpu==True:
-        try:
-            import cupy as cp
-            gpu_available = True
-            array_lib = cp
-            print("GPU available, using cupy")
-        except ImportError:
-            gpu_available = False
-            array_lib = np
-            print("GPU not available, using CPU")
+    if args.gpu:
+        import cupy as array_lib  # or torch.device("cuda"), or RAPIDS cudf, etc.
+        print("GPU acceleration enabled.")
+        print("GPU available, using cupy")
+    else:
+        import numpy as array_lib
+        print("GPU not available, using CPU")
     
     # Handle include/exclude files
     keepranks_file = args.include_rank_file_columns if args.include_rank_file_columns != False else None
@@ -325,9 +330,9 @@ if __name__ == '__main__':
     # Fix the argument passing bug from original
     pre_organize_run(outdir, orgfile, commoncolumn, value_file, boolean_attribute_file, 
                      keepbools_file=keepbools_file, keepranks_file=keepranks_file, 
-                     verbose=args.verbose)
+                     verbose=args.verbose, use_gpu=args.gpu)
     
-    org_to_pval(outdir, orgfile, commoncolumn, value_file, boolean_attribute_file, keepsamples=keepsamples,n_processes=n_processes)
-    pval_to_adjpvals(outdir, orgfile)
+    org_to_pval(outdir, orgfile, commoncolumn, value_file, boolean_attribute_file, keepsamples=keepsamples,n_processes=n_processes,use_gpu=args.gpu)
+    pval_to_adjpvals(outdir, orgfile, use_gpu=args.gpu)
     
     print(f"AREA analysis completed. Results saved with prefix: {orgfile}")
