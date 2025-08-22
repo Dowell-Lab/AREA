@@ -10,6 +10,7 @@ import scipy
 import time 
 from scipy import stats
 
+
 # Try to import prefilter functions if available
 #try:
 #    from filter_functions import run_filtering
@@ -23,7 +24,7 @@ from scipy import stats
 def area_score_norm(ar_ticks, verbose=False):
     '''Calculate the GSEA like enrichment score using the comorbidity
     occurance in the rank as our set'''
-
+    #sys.stdout = open('mylog.log', 'a')
     ar_score = array_lib.array([1 if i > 0 else 0 for i in ar_ticks])  # Use array_lib (either cp or array_lib)
     total = float(array_lib.sum(ar_score))  # Use array_lib sum
 
@@ -60,34 +61,53 @@ def permute_area_norm(ar_ticks, permutations=1000, seed=42):
 
     return es_permute
 
-def calculateNESpval(actualES, simES):
+def calculateNESpval(actualES, simES,use_gpu):
     '''Calculate NES and p-value'''
+    #sys.stdout = open('mylog.log', 'a')
     if actualES > 0:
             simESsubset = array_lib.array([x for x in simES if x < 0])
             mu = array_lib.mean(simESsubset)  # Use array_lib mean
             NES = actualES / mu
             sigma = array_lib.std(simESsubset)  # Use array_lib std
-            p = 1 - scipy.stats.norm.cdf(actualES, mu, sigma)
+            if use_gpu:
+                actualES_np = actualES.get()
+                mu_np = mu.get()
+                sigma_np = sigma.get()  
+                print ("trying to convert. Did it work?", type(actualES_np))
+            else:
+                actualES_np = actualES
+                mu_np = mu
+                sigma_np = sigma
+            print(type(actualES_np), type(mu_np), type(sigma_np))
+            p = 1 - scipy.stats.norm.cdf(actualES_np, mu_np, sigma_np)
     else:
-            simESsubset = array_lib.array([x for x in simES if x > 0])
+            simESsubset = array_lib.array([x for x in simES if x < 0])
             mu = array_lib.mean(simESsubset)  # Use array_lib mean
             NES = -(actualES / mu)
             sigma = array_lib.std(simESsubset)  # Use array_lib std
-            p = scipy.stats.norm.cdf(actualES, mu, sigma)
+            if use_gpu:
+                actualES_np = actualES.get()
+                mu_np = mu.get()
+                sigma_np = sigma.get()
+                print ("trying to convert. Did it work?", type(actualES_np))
+            else:
+                actualES_np = actualES
+                mu_np = mu
+                sigma_np = sigma
+            print(type(actualES_np), type(mu_np), type(sigma_np))
+            p = scipy.stats.norm.cdf(actualES_np, mu_np, sigma_np)
     return NES, p
 
 def is_unique(s):
     a = s.to_numpy() # s.values (pandas<0.24)
     return (a[0] == a).all()
 
-def pre_organize_run(outdir, orgfile, commoncolumn, value_file, boolean_attribute_file, use_gpu,keepbools_file=None, keepranks_file=None, ignorebas_file=None, ignorevalues_file=None,verbose=False):
+def pre_organize_run_old(outdir, orgfile, commoncolumn, rankorderdf, badf, use_gpu,keepbools_file=None, keepranks_file=None, ignorebas_file=None, ignorevalues_file=None,verbose=False):
     if use_gpu:
         import cupy as array_lib
     else:
         import numpy as array_lib
     #read the files
-    badf = pd.read_csv(boolean_attribute_file, index_col=0)
-    rankorderdf = pd.read_csv(value_file, index_col=0)
     if args.verbose:
         print("bool columns at begining", len(badf.columns), badf.columns)
         print("rank columns at begining", len(rankorderdf.columns), rankorderdf.columns)
@@ -120,14 +140,73 @@ def pre_organize_run(outdir, orgfile, commoncolumn, value_file, boolean_attribut
     torundf.to_csv(outdir+orgfile)
 
 
-def process_balabel(balabel, todolist, outdir, commoncolumn, value_file, boolean_attribute_file,keepsamples):
+def pre_organize_run(
+    outdir, orgfile, commoncolumn, rankorderdf, badf, 
+    use_gpu=False, keepbools_file=None, keepranks_file=None,
+    ignorebas_file=None, ignorevalues_file=None, verbose=False
+):
+
+    array_lib = __import__('cupy' if use_gpu else 'numpy')
+
+
+    if verbose:
+        print(f"Loaded bool DF with {len(badf.columns)} columns")
+        print(f"Loaded rank DF with {len(rankorderdf.columns)} columns")
+
+    # Possible labels
+    valuelabels = [c for c in rankorderdf.columns if c != commoncolumn]
+    balabels   = [c for c in badf.columns if c != commoncolumn]
+
+    # Apply keep filters BEFORE product expansion
+    if isinstance(keepbools_file, str):
+        keepba = pd.read_csv(keepbools_file, names=["keepba"])
+        balabels = [b for b in balabels if b in set(keepba["keepba"])]
+        if verbose:
+            print(f"After keepbools filter: {len(balabels)} balabels")
+
+    if isinstance(keepranks_file, str):
+        keepvalue = pd.read_csv(keepranks_file, names=["keepvalue"])
+        valuelabels = [v for v in valuelabels if v in set(keepvalue["keepvalue"])]
+        if verbose:
+            print(f"After keepranks filter: {len(valuelabels)} valuelabels")
+
+    # Remove identical columns early
+    uniq_vals_mask = (rankorderdf[valuelabels].nunique(dropna=False) > 1)
+    valuelabels = [v for v in valuelabels if uniq_vals_mask[v]]
+
+    uniq_bools_mask = (badf[balabels].nunique(dropna=False) > 1)
+    balabels = [b for b in balabels if uniq_bools_mask[b]]
+
+    if verbose:
+        print(f"After removing identical: {len(valuelabels)} valuelabels, {len(balabels)} balabels")
+
+    total_pairs = len(valuelabels) * len(balabels)
+    if verbose:
+        print(f"Final combination count: {total_pairs:,}")
+
+    # Stream output in chunks
+    with open(outdir + orgfile, 'w') as f:
+        f.write("valuelabel,balabel,plan\n")  # header
+        for i in range(0, len(valuelabels), 1):
+            v = valuelabels[i]
+            # build chunk for this valuelabel
+            bal_chunk = pd.DataFrame({
+                "valuelabel": [v] * len(balabels),
+                "balabel": balabels,
+                "plan": "run_area"
+            })
+            bal_chunk.to_csv(f, header=False, index=False)
+
+
+
+def process_balabel(balabel, todolist, outdir, commoncolumn, rankorderdf, badf,keepsamples,use_gpu):
     '''Process a single balabel and return the results'''
     todolistthisba = todolist[todolist["balabel"] == balabel]
     valuecols = todolistthisba["valuelabel"].to_list()
-    baNESpvals = run_a_ba(balabel, valuecols, outdir, commoncolumn, value_file, boolean_attribute_file,keepsamples)
+    baNESpvals = run_a_ba(balabel, valuecols, outdir, commoncolumn, rankorderdf, badf,keepsamples,use_gpu)
     return baNESpvals
 
-def org_to_pval(outdir, orgfile, commoncolumn, value_file, boolean_attribute_file, keepsamples, use_gpu,n_processes=4):
+def org_to_pval(outdir, orgfile, commoncolumn, rankorderdf, badf, keepsamples, use_gpu,n_processes=4):
     if use_gpu:
         import cupy as array_lib
     else:
@@ -139,7 +218,7 @@ def org_to_pval(outdir, orgfile, commoncolumn, value_file, boolean_attribute_fil
     # Set up multiprocessing
     with Pool(processes=n_processes) as pool:
         # Use map to apply the `process_balabel` function in parallel
-        results = pool.starmap(process_balabel, [(balabel, todolist, outdir, commoncolumn, value_file, boolean_attribute_file,keepsamples) for balabel in todolist["balabel"].unique()])
+        results = pool.starmap(process_balabel, [(balabel, todolist, outdir, commoncolumn, rankorderdf, badf,keepsamples,use_gpu) for balabel in todolist["balabel"].unique()])
     
     # Collect the results into one DataFrame
     collectdfs = pd.concat(results, ignore_index=True)
@@ -158,9 +237,7 @@ def pval_to_adjpvals(outdir, orgfile,use_gpu):
     finaldf.to_csv(outdir + orgfile+'.adjpval.csv', index=False)
 
 
-def run_a_ba(ba,valuecols, outdir, commoncolumn, value_file, boolean_attribute_file, keepsamples):
-    badf = pd.read_csv(boolean_attribute_file, index_col=0)
-    rankorderdf = pd.read_csv(value_file, index_col=0)
+def run_a_ba(ba,valuecols, outdir, commoncolumn, rankorderdf, badf, keepsamples,use_gpu):
     bacols_common = [ba, commoncolumn]
     valuecols_common = valuecols+[commoncolumn]
     subbadf = badf[bacols_common]
@@ -176,7 +253,7 @@ def run_a_ba(ba,valuecols, outdir, commoncolumn, value_file, boolean_attribute_f
         df = df.sort_values(colname)
         thiscomorbidity_binary = df[ba].to_list()
         actualES_norm, normalized_pc_score_norm, thistrend_norm, thiscumscore_norm = area_score_norm(thiscomorbidity_binary)
-        onegeneNES, onegenepval = calculateNESpval(actualES_norm, simES_norm)
+        onegeneNES, onegenepval = calculateNESpval(actualES_norm, simES_norm,use_gpu)
         line = [colname, onegeneNES, onegenepval]
         lines.append(line)
     baNESpvals = pd.DataFrame(lines, columns = ["ranked_by","NES", "pval"])
@@ -247,7 +324,6 @@ if __name__ == '__main__':
     args = parser.parse_args()
     timestr = time.strftime("%Y%m%d-%H%M%S")
     orgfile = "area_scores_" + timestr
-    
     # Extract arguments
     boolean_attribute_file = args.boolean_file
     value_file = args.rank_file
@@ -256,7 +332,6 @@ if __name__ == '__main__':
     n_processes = args.processes
     usegpu = args.gpu
     print("am I trying to use gpu?", usegpu)   
- 
     # Ensure output directory exists
     os.makedirs(outdir, exist_ok=True)
 
@@ -327,12 +402,14 @@ if __name__ == '__main__':
     # Run main AREA analysis
     print("=== AREA ANALYSIS STAGE ===")
     
+    badf = pd.read_csv(boolean_attribute_file, index_col=0)
+    rankorderdf = pd.read_csv(value_file, index_col=0)
     # Fix the argument passing bug from original
-    pre_organize_run(outdir, orgfile, commoncolumn, value_file, boolean_attribute_file, 
+    pre_organize_run(outdir, orgfile, commoncolumn, rankorderdf, badf, 
                      keepbools_file=keepbools_file, keepranks_file=keepranks_file, 
                      verbose=args.verbose, use_gpu=args.gpu)
     
-    org_to_pval(outdir, orgfile, commoncolumn, value_file, boolean_attribute_file, keepsamples=keepsamples,n_processes=n_processes,use_gpu=args.gpu)
+    org_to_pval(outdir, orgfile, commoncolumn, rankorderdf, badf, keepsamples=keepsamples,n_processes=n_processes,use_gpu=args.gpu)
     pval_to_adjpvals(outdir, orgfile, use_gpu=args.gpu)
     
     print(f"AREA analysis completed. Results saved with prefix: {orgfile}")
