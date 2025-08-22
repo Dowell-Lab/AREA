@@ -73,12 +73,10 @@ def calculateNESpval(actualES, simES,use_gpu):
                 actualES_np = actualES.get()
                 mu_np = mu.get()
                 sigma_np = sigma.get()  
-                print ("trying to convert. Did it work?", type(actualES_np))
             else:
                 actualES_np = actualES
                 mu_np = mu
                 sigma_np = sigma
-            print(type(actualES_np), type(mu_np), type(sigma_np))
             p = 1 - scipy.stats.norm.cdf(actualES_np, mu_np, sigma_np)
     else:
             simESsubset = array_lib.array([x for x in simES if x < 0])
