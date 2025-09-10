@@ -32,7 +32,6 @@ include_rank_file_columns=${indir}include_rank_cols_chr21.csv
 include_boolean_file_columns=${indir}include_bool_cols_min_5_cT21.csv
 outdirname_pre=${outdirname}T21_chr21_mincomobid5T21_HP_
 
-mkdir -p "$outdirname"
 
 echo $rank_file
 echo $boolean_attribute_file

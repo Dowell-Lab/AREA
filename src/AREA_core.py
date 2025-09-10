@@ -87,12 +87,10 @@ def calculateNESpval(actualES, simES,use_gpu):
                 actualES_np = actualES.get()
                 mu_np = mu.get()
                 sigma_np = sigma.get()
-                print ("trying to convert. Did it work?", type(actualES_np))
             else:
                 actualES_np = actualES
                 mu_np = mu
                 sigma_np = sigma
-            print(type(actualES_np), type(mu_np), type(sigma_np))
             p = scipy.stats.norm.cdf(actualES_np, mu_np, sigma_np)
     return NES, p
 
@@ -329,9 +327,6 @@ if __name__ == '__main__':
     commoncolumn = args.common_column_name
     n_processes = args.processes
     usegpu = args.gpu
-    print("am I trying to use gpu?", usegpu)   
-    # Ensure output directory exists
-    os.makedirs(outdir, exist_ok=True)
 
     #If gpu flag
     if args.gpu:
