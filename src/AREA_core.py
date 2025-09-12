@@ -65,21 +65,8 @@ def calculateNESpval(actualES, simES,use_gpu):
     '''Calculate NES and p-value'''
     #sys.stdout = open('mylog.log', 'a')
     if actualES > 0:
-            simESsubset = array_lib.array([x for x in simES if x < 0])
-            mu = array_lib.mean(simESsubset)  # Use array_lib mean
-            NES = actualES / mu
-            sigma = array_lib.std(simESsubset)  # Use array_lib std
-            if use_gpu:
-                actualES_np = actualES.get()
-                mu_np = mu.get()
-                sigma_np = sigma.get()  
-            else:
-                actualES_np = actualES
-                mu_np = mu
-                sigma_np = sigma
-            p = 1 - scipy.stats.norm.cdf(actualES_np, mu_np, sigma_np)
-    else:
-            simESsubset = array_lib.array([x for x in simES if x < 0])
+            print("actualES > 0", actualES)
+            simESsubset = array_lib.array([x for x in simES if x > 0])
             mu = array_lib.mean(simESsubset)  # Use array_lib mean
             NES = -(actualES / mu)
             sigma = array_lib.std(simESsubset)  # Use array_lib std
@@ -91,8 +78,23 @@ def calculateNESpval(actualES, simES,use_gpu):
                 actualES_np = actualES
                 mu_np = mu
                 sigma_np = sigma
+            p = 1 - scipy.stats.norm.cdf(actualES_np, mu_np, sigma_np)
+    else:
+            simESsubset = array_lib.array([x for x in simES if x < 0])
+            mu = array_lib.mean(simESsubset)  # Use array_lib mean
+            NES = actualES / mu
+            sigma = array_lib.std(simESsubset)  # Use array_lib std
+            if use_gpu:
+                actualES_np = actualES.get()
+                mu_np = mu.get()
+                sigma_np = sigma.get()
+            else:
+                actualES_np = actualES
+                mu_np = mu
+                sigma_np = sigma
             p = scipy.stats.norm.cdf(actualES_np, mu_np, sigma_np)
     return NES, p
+
 
 def is_unique(s):
     a = s.to_numpy() # s.values (pandas<0.24)
