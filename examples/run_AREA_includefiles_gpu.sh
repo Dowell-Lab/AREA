@@ -27,7 +27,7 @@ rank_file=${indir}kallisto_200401lines_participants_normcounts.csv
 boolean_attribute_file=${indir}full_HP_binary_attribute.csv
 outdirname=$HOME/area_runs/AREA_2025/outdir/
 include_rank_file_columns=${indir}include_rank_cols_minexp_1.csv
-include_boolean_file_columns=${indir}include_bool_cols_min_5_cT21.csv
+include_boolean_file_columns=${indir}include_bool_cols_min_5_cT21_HP.csv
 outdirname_pre=${outdirname}all_minexp1_mincomobid5T21_HP_gpu
 
 
