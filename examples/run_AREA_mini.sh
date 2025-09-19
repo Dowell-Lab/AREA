@@ -21,7 +21,9 @@ source $path_to_venv/bin/activate
 
 
 #set paths to AREA and to files to load in
-path_to_area=$HOME/AREA/src/
+path_to_area_main=$HOME/AREA/
+path_to_area_testfiles=${path_to_area_main}testdata/
+path_to_area=${path_to_area_main}src/
 indir=/Shares/down/public/INLCUDE_2024/kallisto_20241030/selfannoated/
 commoncolumn=Participant
 rank_file=${indir}miniRNAvalues_participants_normcounts.csv
