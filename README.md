@@ -4,9 +4,9 @@ Attribute rank enrichment analysis
 
 ## Summary
 
-The goal of AREA is to link binary attributes to value attributes via samples. In this way, we may be able to find value attributes that cause the binary attributes.
+The goal of AREA is to link binary attributes to value attributes via samples. In this way, we may be able to find value attributes that cause the binary attributes or vise versa. Similar to correlation anaysis, causality is not clear from this anaysis alone, but these linkages can be considered potientally cauase, and downstream experiments should be use to determine causality. 
 
-In our example, we analyze gene expression data from 254 individuals with Down syndrome, along with their associated medical conditions. Our objective is to identify genes that, when highly expressed, may influence the likelihood of specific medical conditions.  However, it's important to note that, similar to correlation analysis, a connection between a gene and a condition does not imply causation. 
+In our example, we analyze gene expression data from individuals. These individuals have Down syndrome. The binary attributes are their associated medical conditions. Our objective is to identify genes that, when highly expressed, may influence the likelihood of specific medical conditions.   
 
 ![alt text](https://github.com/Dowell-Lab/psea/blob/main/src/images/results_example_NES.png "results example")
 
@@ -14,12 +14,12 @@ NES stands for Normalized Enrichment Score. A negative NES indicates that high l
 
 ## AREA inputs and outputs
 
-AREA is a tool that takes two CSV files as input. Both CSVs have the same samples, but one CSV has a binary attribute for each sample and one has a value attribute for each sample. The output is a CSV with statistically significant linkages between the binary attributes and the value columns. 
+AREA is a tool that takes two CSV files as input. Both CSVs have the same samples (in the example, indivudals), but one CSV has a binary attribute for each sample and one has a value attribute for each sample. The output is a CSV with statistically significant linkages between the binary attributes and the value columns. 
 
 ### Input files
 
 Both input CSV files must have a common sample name column. 
-In our case, that common sample name column is "Patient".
+In our case, that common sample name column is "Participant".
 
 ### Binary Attribute file
 
