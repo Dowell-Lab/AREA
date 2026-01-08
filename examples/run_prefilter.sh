@@ -76,8 +76,6 @@ python3 ${prefilter_func}run_prefilter.py \
 # check if the script completed successfully - standard output
 if [ $? -eq 0 ]; then
     echo "Filtering completed successfully at: $(date '+%Y-%m-%d %H:%M:%S')"
-    echo ""
-    echo "=== NEXT STEPS ==="
     echo "Use these filtered dataframes with AREA:"
     echo "python3 area_core.py \\"
     echo "  -baf $filtered_binary_attribute_file \\"
