@@ -2,7 +2,7 @@ import pandas as pd
 import os
 
 def load_chr21_genes(chr21_file):
-    """Load chromosome 21 gene list and return base Ensembl IDs (without version)"""
+    """Load chromosome 21 gene list and return base Ensembl IDs (without the period and following version number)"""
     if chr21_file and os.path.isfile(chr21_file):
         # Read file with no header - first line is data
         chr21_df = pd.read_csv(chr21_file, header=None, names=['gene_id'])
@@ -55,7 +55,7 @@ def filter_t21_patients(binary_df, values_df, t21_column, sample_name):
     
     # Verify alignment
     assert len(binary_df_filtered[sample_name].unique()) == len(values_df_filtered[sample_name].unique()), \
-        "Filtered dataframes must have same number of unique participants!"
+        "Filtered dataframes must have same number of unique participants"
     
     return binary_df_filtered, values_df_filtered
 
