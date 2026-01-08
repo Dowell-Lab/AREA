@@ -17,15 +17,15 @@ def main():
     parser.add_argument('-vf', '--values_file', type=str, required=True,
                         help='File with patient IDs, gene names, and expression values')
     parser.add_argument('-baf', '--binary_attribute_file', type=str, required=True,
-                        help='File with patient IDs and comorbidity designations')
+                        help='File with patient IDs and comorbidity designations or other binary attribute')
     parser.add_argument('-cc', '--common_column_name', type=str, required=True,
                         help='Column name that contains patient IDs/names')
     parser.add_argument('-od', '--outdir', type=str, required=True,
-                        help='Output directory for filtered files')
+                        help='Output directory for filtered files, and and include/exclude gene/attribute lists')
 
     # Filtering thresholds
-    parser.add_argument('--patient_comorbid_threshold', type=int, default=1,
-                        help='Minimum number of comorbidities a patient should have (default: 1)')
+    parser.add_argument('--patient_comorbid_threshold', type=int, default=0,
+                        help='Minimum number of comorbidities a patient should have (default: 0)')
     parser.add_argument('--min_comorbids_percent', type=float, default=0.05,
                         help='Minimum percent prevalence of comorbidity to retain (default: 0.05)')
     parser.add_argument('--max_comorbids_percent', type=float, default=0.95,
@@ -34,14 +34,33 @@ def main():
                         help='Minimum mean gene expression to retain gene (default: 1.0)')
     parser.add_argument('--individual_expression_threshold', type=int, default=10,
                         help='Minimum individual expression threshold (default: 10)')
+    
+    # Chromosome 21 filtering arguments
+    parser.add_argument('--chr21_file', type=str, default=None,
+                    help='File (with path) containing chromosome 21 gene IDs (one per line, no header)')
+    parser.add_argument('--chr21_only', action='store_true',
+                    help='This keeps only chromosome 21 genes (default: False, keeps all genes)')
+    parser.add_argument('--exclude_chr21', action='store_true',
+                    help='This one exclude chromosome 21 genes (keep only non-chr21 genes)')
+    
+    # removing specified comorbids (potentially confounding)
+    parser.add_argument('--remove_comorbidities', nargs='+', type=str, default=None,
+                    help='List of comorbidities to manually remove (space separated). Example: --remove_comorbidities MONDO_obesity MONDO_obstructive_sleep_apnea_syndrome')
 
-    # Output file specifications - UPDATED FOR DATAFRAMES
+    #Trisomy 21 only arguments (grab patients w/ a specific comorbid, in this case "comlete_trisomy_21")
+    parser.add_argument('--t21_only', action='store_true',
+                    help='Keep only patients with complete trisomy 21')
+    parser.add_argument('--t21_column', type=str, default='MONDO_complete_trisomy_21',
+                    help='Column name for T21 status (default: MONDO_complete_trisomy_21)')
+
+
+    # Output file specifications - updated for dataframes
     parser.add_argument('--filtered_values_file', type=str, default=None,
                         help='Output file for filtered gene expression dataframe (default: auto-generated)')
     parser.add_argument('--filtered_binary_attribute_file', type=str, default=None,
                         help='Output file for filtered comorbidity dataframe (default: auto-generated)')
     
-    # Optional: still output the old format lists for reference
+    # output the old format lists as well
     parser.add_argument('--include_values_file', type=str, default=None,
                         help='Output file for list of genes to include (default: auto-generated)')
     parser.add_argument('--include_binary_attribute_file', type=str, default=None,
@@ -128,7 +147,12 @@ def main():
             include_values_file=args.include_values_file,
             include_binary_attribute_file=args.include_binary_attribute_file,
             exclude_values_file=args.exclude_values_file,
-            exclude_binary_attribute_file=args.exclude_binary_attribute_file
+            exclude_binary_attribute_file=args.exclude_binary_attribute_file,
+            chr21_file=args.chr21_file,
+            chr21_only=args.chr21_only if not args.exclude_chr21 else False,
+            remove_comorbidities=args.remove_comorbidities,
+            t21_only=args.t21_only,
+            t21_column=args.t21_column
         )
 
         print(f"Filtering completed successfully at: {time.strftime('%Y-%m-%d %H:%M:%S')}")
