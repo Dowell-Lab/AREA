@@ -191,12 +191,12 @@ def filter_comorbidities(binary_df, patient_comorbid_threshold, min_comorbids_pe
 def filter_gene_expression(values_df, individual_expression_threshold, min_mean_expression, 
                           sample_name, chr21_genes=None, chr21_only=False):
     """ This function filters the gene expression data based on the user defined thresholds. 
-    Now includes optional chromosome 21 filtering. """
+    And also includes optional chromosome 21 filtering. """
     
     # Get all columns except the sample_name column
     expression_cols = [col for col in values_df.columns if col != sample_name]
     
-    # Apply chromosome filtering FIRST if requested
+    # Apply chromosome filtering first if requested
     if chr21_genes is not None:
         original_count = len(expression_cols)
         expression_cols = filter_genes_by_chromosome(expression_cols, chr21_genes, chr21_only)
@@ -318,7 +318,7 @@ def run_filtering(patient_comorbid_threshold,
                   t21_only=False,
                   t21_column='MONDO_complete_trisomy_21'):
     
-    """ This is the main function that runs comorbidity and gene expression filtering. """
+    """ This is the main function that runs comorbidity, individual and gene expression filtering. """
     try:
         # Load chr21 genes if file provided
         chr21_genes = None
