@@ -6,24 +6,28 @@
 #SBATCH --ntasks=64
 #SBATCH --mem=10gb # Memory limit
 #SBATCH --time=10:00:00 # Time limit hrs:min:sec
-#SBATCH --output=/scratch/Shares/dowell/temp/ChrisO/eando/slurm_test.%j.out # Standard output
-#SBATCH --error=/scratch/Shares/dowell/temp/ChrisO/eando/slurm_test.%j.err # Standard error log
+#SBATCH --output=/Users/ozeroff/Ozeroff_scratch/ChrisO/AREA_git/chris_AREA/eando/slurm_test.%j.out # Standard output
+#SBATCH --error=/Users/ozeroff/Ozeroff_scratch/ChrisO/AREA_git/chris_AREA/eando/slurm_test.%j.err # Standard error log
 
 #turn on the virtual machine you are using if you are using one
 path_to_venv=$HOME
 source $path_to_venv/jhub_venv/bin/activate 
 
-indir=~/ChrisO/PSEA_OUTPUT/
-outdir=$HOME/ChrisO/PSEA/AREA_fast/output/filtered_gene_comorbids/all_chrom/
-common_column_name=Patient
-values_file=${indir}first400_express_values_df.csv
-binary_attribute_file=${indir}first400_comorbid_df.csv
+indir=/Shares/down/public/INLCUDE_2024/kallisto_20241030/selfannoated/
+outdir=$HOME/Ozeroff_scratch/ChrisO/AREA_git/chris_AREA/output/filtered_data/all_chroms/just_T21/
+common_column_name=Participant
+values_file=${indir}kallisto_200401lines_participants_normcounts.csv
+binary_attribute_file=${indir}full_MONDO_binary_attribute.csv
+prefilter_func=$HOME/Ozeroff_scratch/ChrisO/AREA_git/chris_AREA/src/
 
-### Main outputs - filtered dataframes for AREA
+#chr21 gene file path (needed for running only chr21 arguments)
+chr21_path=$HOME/down_public/INLCUDE_2024/kallisto_20241030/selfannoated/gene_id_no_version_chr21only.csv
+
+# filtered dataframe outputs for AREA
 filtered_values_file=${outdir}filtered_values_dataframe.csv
 filtered_binary_attribute_file=${outdir}filtered_binary_attributes_dataframe.csv
 
-### Reference output lists, with included and excluded genes/comorbids
+# reference output lists, with included and excluded genes/comorbids
 include_values_file=${outdir}include_values_long.csv
 include_binary_attribute_file=${outdir}include_binary_attribute_long.csv
 exclude_values_file=${outdir}exclude_values_long.csv
@@ -46,7 +50,7 @@ echo $include_binary_attribute_file
 echo ""
 echo "Filtering running..."
 
-python3 run_prefilter.py \
+python3 ${prefilter_func}run_prefilter.py \
     -cc $common_column_name \
     -vf $values_file \
     -baf $binary_attribute_file \
@@ -57,13 +61,17 @@ python3 run_prefilter.py \
     --exclude_values_file $exclude_values_file \
     --include_binary_attribute_file $include_binary_attribute_file \
     --exclude_binary_attribute_file $exclude_binary_attribute_file \
-    --patient_comorbid_threshold 1 \
+    --patient_comorbid_threshold 0 \
     --min_comorbids_percent 0.05 \
     --max_comorbids_percent 0.95 \
     --min_mean_expression 1.0 \
     --individual_expression_threshold 10 \
     --verbose
-    
+##    --t21_only \
+##    --t21_column MONDO_complete_trisomy_21 \
+## Use these arguments to only run AREA with the complete_trisomy_21 individuals
+
+
 # 0.1 was the original for min mean, trying 1.0
 # check if the script completed successfully - standard output
 if [ $? -eq 0 ]; then
