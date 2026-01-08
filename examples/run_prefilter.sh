@@ -20,7 +20,7 @@ values_file=${indir}kallisto_200401lines_participants_normcounts.csv
 binary_attribute_file=${indir}full_MONDO_binary_attribute.csv
 prefilter_func=$HOME/Ozeroff_scratch/ChrisO/AREA_git/chris_AREA/src/
 
-#chr21 gene file path (needed for running only chr21 arguments)
+#chr21 gene file path (needed for running only chr21 arguments, otherwise will n0ot do anything)
 chr21_path=$HOME/down_public/INLCUDE_2024/kallisto_20241030/selfannoated/gene_id_no_version_chr21only.csv
 
 # filtered dataframe outputs for AREA
@@ -70,10 +70,9 @@ python3 ${prefilter_func}run_prefilter.py \
 ##    --t21_only \
 ##    --t21_column MONDO_complete_trisomy_21 \
 ## Use these arguments to only run AREA with the complete_trisomy_21 individuals
+## Other arguments (Chr21 only, removing cobnfounding comorbids) found in "run_prefilter_py"
 
-
-# 0.1 was the original for min mean, trying 1.0
-# check if the script completed successfully - standard output
+# standard output
 if [ $? -eq 0 ]; then
     echo "Filtering completed successfully at: $(date '+%Y-%m-%d %H:%M:%S')"
     echo "Use these filtered dataframes with AREA:"
