@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """
 Prefilter script for AREA analysis
-Outputs filtered dataframes for use with AREA
+Outputs filtered dataframes and include/exlude gene and comorbid lists for use with AREA
 """
 
 import argparse
@@ -10,7 +10,7 @@ import time
 from filter_functions import run_filtering
 
 def main():
-    """Main function for standalone prefiltering"""
+    """Main function for prefiltering"""
     parser = argparse.ArgumentParser(description="Prefilter data for AREA analysis")
 
     # Required arguments
