@@ -1,6 +1,6 @@
 # AREA
 
-Attribute rank enrichment analysis
+Attribute rank enrichment algorithum
 
 ## Summary
 
