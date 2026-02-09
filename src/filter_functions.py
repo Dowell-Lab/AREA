@@ -2,7 +2,7 @@ import pandas as pd
 import os
 
 def load_chr21_genes(chr21_file):
-    """Load chromosome 21 gene list and return base Ensembl IDs (without the period and following version number)"""
+    """Load chromosome 21 gene list and return base Ensembl IDs (without version)"""
     if chr21_file and os.path.isfile(chr21_file):
         # Read file with no header - first line is data
         chr21_df = pd.read_csv(chr21_file, header=None, names=['gene_id'])
@@ -55,7 +55,7 @@ def filter_t21_patients(binary_df, values_df, t21_column, sample_name):
     
     # Verify alignment
     assert len(binary_df_filtered[sample_name].unique()) == len(values_df_filtered[sample_name].unique()), \
-        "Filtered dataframes must have same number of unique participants"
+        "Filtered dataframes must have same number of unique participants!"
     
     return binary_df_filtered, values_df_filtered
 
@@ -188,15 +188,25 @@ def filter_comorbidities(binary_df, patient_comorbid_threshold, min_comorbids_pe
     
     return filtered_binary_df, n_comorbid_include, n_comorbid_exclude
 
+def load_comorbidities_list(comorbidities_file):
+    """Load a list of comorbidities from a file (one per line)"""
+    if comorbidities_file and os.path.isfile(comorbidities_file):
+        with open(comorbidities_file, 'r') as f:
+            # Read lines, strip whitespace, and ignore empty lines
+            comorbidities = [line.strip() for line in f if line.strip()]
+        print(f"  Loaded {len(comorbidities)} comorbidities to remove from file")
+        return comorbidities
+    return None
+
 def filter_gene_expression(values_df, individual_expression_threshold, min_mean_expression, 
                           sample_name, chr21_genes=None, chr21_only=False):
     """ This function filters the gene expression data based on the user defined thresholds. 
-    And also includes optional chromosome 21 filtering. """
+    Now includes optional chromosome 21 filtering. """
     
     # Get all columns except the sample_name column
     expression_cols = [col for col in values_df.columns if col != sample_name]
     
-    # Apply chromosome filtering first if requested
+    # Apply chromosome filtering FIRST if requested
     if chr21_genes is not None:
         original_count = len(expression_cols)
         expression_cols = filter_genes_by_chromosome(expression_cols, chr21_genes, chr21_only)
@@ -315,16 +325,27 @@ def run_filtering(patient_comorbid_threshold,
                   chr21_file=None,
                   chr21_only=False,
                   remove_comorbidities=None,
+                  remove_comorbidities_file=None,
                   t21_only=False,
                   t21_column='MONDO_complete_trisomy_21'):
     
-    """ This is the main function that runs comorbidity, individual and gene expression filtering. """
+    """ This is the main function that runs comorbidity and gene expression filtering. """
     try:
         # Load chr21 genes if file provided
         chr21_genes = None
         if chr21_file:
             print(f"\nLoading chromosome 21 genes from {chr21_file}")
             chr21_genes = load_chr21_genes(chr21_file)
+        
+        # Load comorbidities to remove from file if provided
+        if remove_comorbidities_file:
+            print(f"\nLoading comorbidities to remove from {remove_comorbidities_file}")
+            comorbidities_from_file = load_comorbidities_list(remove_comorbidities_file)
+            # Combine with any directly specified comorbidities
+            if remove_comorbidities:
+                remove_comorbidities = list(remove_comorbidities) + comorbidities_from_file
+            else:
+                remove_comorbidities = comorbidities_from_file
         
         # Validate input files and load data - now with T21 filtering
         binary_df, values_df = validate_input_files(values_file, 

@@ -13,15 +13,19 @@
 path_to_venv=$HOME
 source $path_to_venv/jhub_venv/bin/activate 
 
-indir=/Shares/down/public/INLCUDE_2024/kallisto_20241030/selfannoated/
-outdir=$HOME/Ozeroff_scratch/ChrisO/AREA_git/chris_AREA/output/filtered_data/all_chroms/just_T21/
+indir=$HOME/Ozeroff_scratch/ChrisO/AREA_git/chris_AREA/output/ptsd/
+outdir=$HOME/Ozeroff_scratch/ChrisO/AREA_git/chris_AREA/output/ptsd/Filtered/
 common_column_name=Participant
-values_file=${indir}kallisto_200401lines_participants_normcounts.csv
-binary_attribute_file=${indir}full_MONDO_binary_attribute.csv
+values_file=${indir}geneexptpm.rank.csv
+binary_attribute_file=${indir}ptsd.boolean.csv
 prefilter_func=$HOME/Ozeroff_scratch/ChrisO/AREA_git/chris_AREA/src/
 
-#chr21 gene file path (needed for running only chr21 arguments, otherwise will n0ot do anything)
+#chr21 gene file path (needed for running only chr21 arguments)
 chr21_path=$HOME/down_public/INLCUDE_2024/kallisto_20241030/selfannoated/gene_id_no_version_chr21only.csv
+
+# Path to file with comorbids to exclude (if excluding many that are confounding)
+#This removes comorbids independently of the 5 and 95 flags below, which will still remove too rare and too common comorbids
+ex_comorb_path=$HOME/Ozeroff_scratch/ChrisO/AREA_git/chris_AREA/output/filtered_data/exclude_comorbiditieswhenrunningwith_all400.txt
 
 # filtered dataframe outputs for AREA
 filtered_values_file=${outdir}filtered_values_dataframe.csv
@@ -65,16 +69,13 @@ python3 ${prefilter_func}run_prefilter.py \
     --min_comorbids_percent 0.05 \
     --max_comorbids_percent 0.95 \
     --min_mean_expression 1.0 \
-    --individual_expression_threshold 10 \
     --verbose
-##    --t21_only \
-##    --t21_column MONDO_complete_trisomy_21 \
-## Use these arguments to only run AREA with the complete_trisomy_21 individuals
-## Other arguments (Chr21 only, removing cobnfounding comorbids) found in "run_prefilter_py"
 
-# standard output
+# check if the script completed successfully - standard output
 if [ $? -eq 0 ]; then
     echo "Filtering completed successfully at: $(date '+%Y-%m-%d %H:%M:%S')"
+    echo ""
+    echo "=== NEXT STEPS ==="
     echo "Use these filtered dataframes with AREA:"
     echo "python3 area_core.py \\"
     echo "  -baf $filtered_binary_attribute_file \\"

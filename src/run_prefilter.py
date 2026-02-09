@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """
 Prefilter script for AREA analysis
-Outputs filtered dataframes and include/exlude gene and comorbid lists for use with AREA
+Outputs filtered dataframes for use with AREA
 """
 
 import argparse
@@ -10,7 +10,7 @@ import time
 from filter_functions import run_filtering
 
 def main():
-    """Main function for prefiltering"""
+    """Main function for standalone prefiltering"""
     parser = argparse.ArgumentParser(description="Prefilter data for AREA analysis")
 
     # Required arguments
@@ -46,6 +46,11 @@ def main():
     # removing specified comorbids (potentially confounding)
     parser.add_argument('--remove_comorbidities', nargs='+', type=str, default=None,
                     help='List of comorbidities to manually remove (space separated). Example: --remove_comorbidities MONDO_obesity MONDO_obstructive_sleep_apnea_syndrome')
+
+    # Can also add comorbids with list (again, potentially confounding because of T21)
+    parser.add_argument('--remove_comorbidities_file', type=str, default=None,
+                    help='File containing comorbidities to remove. Example use: --remove_comorbidities_file $ex_comorb_path')
+
 
     #Trisomy 21 only arguments (grab patients w/ a specific comorbid, in this case "comlete_trisomy_21")
     parser.add_argument('--t21_only', action='store_true',
@@ -151,6 +156,7 @@ def main():
             chr21_file=args.chr21_file,
             chr21_only=args.chr21_only if not args.exclude_chr21 else False,
             remove_comorbidities=args.remove_comorbidities,
+            remove_comorbidities_file=args.remove_comorbidities_file,
             t21_only=args.t21_only,
             t21_column=args.t21_column
         )
