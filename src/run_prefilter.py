@@ -33,7 +33,9 @@ def main():
     parser.add_argument('--min_mean_expression', type=float, default=1.0,
                         help='Minimum mean gene expression to retain gene (default: 1.0)')
     parser.add_argument('--individual_expression_threshold', type=int, default=10,
-                        help='Minimum individual expression threshold (default: 10)')
+                        help='Minimum individual expression threshold to retain individual (default: 10)')
+    parser.add_argument('--min_individuals_expressing', type=int, default=10,
+                        help='Minimum number of individuals with expression >= min_mean_expression to retain gene (default: 10)')
     
     # Chromosome 21 filtering arguments
     parser.add_argument('--chr21_file', type=str, default=None,
@@ -121,7 +123,7 @@ def main():
         print(f"  Patient comorbid threshold: {args.patient_comorbid_threshold}")
         print(f"  Comorbidity prevalence range: {args.min_comorbids_percent} - {args.max_comorbids_percent}")
         print(f"  Minimum mean expression: {args.min_mean_expression}")
-        print(f"  Individual expression threshold: {args.individual_expression_threshold}")
+        print(f"  Min individuals expressing: {args.min_individuals_expressing}")
         print(f"")
         print(f"Main output files (filtered dataframes):")
         print(f"  Filtered values dataframe: {args.filtered_values_file}")
@@ -158,7 +160,8 @@ def main():
             remove_comorbidities=args.remove_comorbidities,
             remove_comorbidities_file=args.remove_comorbidities_file,
             t21_only=args.t21_only,
-            t21_column=args.t21_column
+            t21_column=args.t21_column,
+            min_individuals_expressing=args.min_individuals_expressing
         )
 
         print(f"Filtering completed successfully at: {time.strftime('%Y-%m-%d %H:%M:%S')}")
