@@ -199,7 +199,8 @@ def load_comorbidities_list(comorbidities_file):
     return None
 
 def filter_gene_expression(values_df, individual_expression_threshold, min_mean_expression, 
-                          sample_name, chr21_genes=None, chr21_only=False):
+                          sample_name, chr21_genes=None, chr21_only=False,
+                          min_individuals_expressing=None):
     """ This function filters the gene expression data based on the user defined thresholds. 
     Now includes optional chromosome 21 filtering. """
     
@@ -238,7 +239,18 @@ def filter_gene_expression(values_df, individual_expression_threshold, min_mean_
     # Filter genes based on mean expression threshold
     meansdf_include = meansdf[meansdf["mean_value"] > min_mean_expression]
     meansdf_exclude = meansdf[~meansdf.index.isin(meansdf_include.index)]
-    
+
+    # Prevelance filter (gene expression must occur at the specified mean expression level in at least 10 individuals)
+    if min_individuals_expressing is not None:
+        genes_after_mean = meansdf_include.index.tolist()
+        expr_subset = expression_df_nosamples[genes_after_mean]
+        expressing_counts = (expr_subset >= min_mean_expression).sum(axis=0)
+        passing_prevalence = expressing_counts[expressing_counts >= min_individuals_expressing].index
+        meansdf_exclude = pd.concat([meansdf_exclude, meansdf_include[~meansdf_include.index.isin(passing_prevalence)]])
+        meansdf_include = meansdf_include[meansdf_include.index.isin(passing_prevalence)]
+        print(f"  Prevalence filter (>= {min_individuals_expressing} individuals with expression >= {min_mean_expression}):")
+        print(f"    Genes passing: {len(meansdf_include)}")
+                              
     # Get the list of genes to keep
     genes_to_keep = meansdf_include.index.tolist()
     
@@ -312,7 +324,7 @@ def run_filtering(patient_comorbid_threshold,
                   min_comorbids_percent, 
                   max_comorbids_percent, 
                   individual_expression_threshold, 
-                  min_mean_expression, 
+                  min_mean_expression,
                   values_file, 
                   binary_attribute_file, 
                   sample_name, 
@@ -327,7 +339,8 @@ def run_filtering(patient_comorbid_threshold,
                   remove_comorbidities=None,
                   remove_comorbidities_file=None,
                   t21_only=False,
-                  t21_column='MONDO_complete_trisomy_21'):
+                  t21_column='MONDO_complete_trisomy_21',
+                  min_individuals_expressing=None):
     
     """ This is the main function that runs comorbidity and gene expression filtering. """
     try:
@@ -387,7 +400,8 @@ def run_filtering(patient_comorbid_threshold,
             min_mean_expression, 
             sample_name,
             chr21_genes,
-            chr21_only)
+            chr21_only,
+            min_individuals_expressing)
         
         print(f"Gene expression filtering results:")
         print(f"  Passing genes: {len(meansdf_include)}")
