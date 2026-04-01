@@ -2,8 +2,8 @@
 Unit and integration tests for the AREA package.
 
 Tests use real data from ``AREA/testdata/``:
-    - genes.csv       — rank file   (samples × genes)
-    - comorbid_file.csv — boolean file (samples × comorbidities)
+    - value_expression.csv — rank file   (samples × genes)
+    - comorbid_file.csv    — boolean file (samples × comorbidities)
 
 Run from the project root:
     python run_tests.py
@@ -26,12 +26,17 @@ _HERE = os.path.dirname(os.path.abspath(__file__))
 _PROJECT_ROOT = os.path.dirname(_HERE)          # AREA/
 _TESTDATA = os.path.join(_PROJECT_ROOT, "testdata")
 
-RANK_FILE = os.path.join(_TESTDATA, "genes.csv")
+RANK_FILE = os.path.join(_TESTDATA, "value_expression.csv")
 BOOL_FILE = os.path.join(_TESTDATA, "comorbid_file.csv")
 
 
 def _data_available():
     return os.path.isfile(RANK_FILE) and os.path.isfile(BOOL_FILE)
+
+
+# The join column shared between both test CSV files.
+# This must be specified explicitly — AREA never guesses the join column.
+JOIN_COLUMN = "Patient"
 
 
 # ===================================================================
@@ -166,8 +171,7 @@ class TestPlanning(unittest.TestCase):
     def setUpClass(cls):
         cls.rank_df = pd.read_csv(RANK_FILE, index_col=0).reset_index()
         cls.bool_df = pd.read_csv(BOOL_FILE, index_col=0).reset_index()
-        # Use the first column as the join column (shared sample ID)
-        cls.join_column = cls.rank_df.columns[0]
+        cls.join_column = JOIN_COLUMN
         cls.tmpdir = tempfile.mkdtemp()
 
     @classmethod
@@ -241,7 +245,7 @@ class TestRunner(unittest.TestCase):
     def setUpClass(cls):
         cls.rank_df = pd.read_csv(RANK_FILE, index_col=0).reset_index()
         cls.bool_df = pd.read_csv(BOOL_FILE, index_col=0).reset_index()
-        cls.join_column = cls.rank_df.columns[0]
+        cls.join_column = JOIN_COLUMN
         cls.tmpdir = tempfile.mkdtemp()
 
         # Build a small plan first (limit to 2 bool cols × 2 rank cols)
@@ -544,9 +548,7 @@ class TestEndToEnd(unittest.TestCase):
 
     @staticmethod
     def _detect_join_column():
-        """Return the join column name from the rank file header."""
-        rank_df = pd.read_csv(RANK_FILE, index_col=0, nrows=0).reset_index()
-        return rank_df.columns[0]
+        return JOIN_COLUMN
 
 
 # ===================================================================
