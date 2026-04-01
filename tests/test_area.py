@@ -39,6 +39,14 @@ def _data_available():
 JOIN_COLUMN = "Patient"
 
 
+def _load_csv(path):
+    """Read a CSV the same way cli.py does and drop the spurious 'index' col."""
+    df = pd.read_csv(path, index_col=0).reset_index()
+    if "index" in df.columns and JOIN_COLUMN != "index":
+        df.drop(columns="index", inplace=True)
+    return df
+
+
 # ===================================================================
 # 1) Backend tests
 # ===================================================================
@@ -169,8 +177,8 @@ class TestPlanning(unittest.TestCase):
 
     @classmethod
     def setUpClass(cls):
-        cls.rank_df = pd.read_csv(RANK_FILE, index_col=0).reset_index()
-        cls.bool_df = pd.read_csv(BOOL_FILE, index_col=0).reset_index()
+        cls.rank_df = _load_csv(RANK_FILE)
+        cls.bool_df = _load_csv(BOOL_FILE)
         cls.join_column = JOIN_COLUMN
         cls.tmpdir = tempfile.mkdtemp()
 
@@ -243,8 +251,8 @@ class TestRunner(unittest.TestCase):
 
     @classmethod
     def setUpClass(cls):
-        cls.rank_df = pd.read_csv(RANK_FILE, index_col=0).reset_index()
-        cls.bool_df = pd.read_csv(BOOL_FILE, index_col=0).reset_index()
+        cls.rank_df = _load_csv(RANK_FILE)
+        cls.bool_df = _load_csv(BOOL_FILE)
         cls.join_column = JOIN_COLUMN
         cls.tmpdir = tempfile.mkdtemp()
 
