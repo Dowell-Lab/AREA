@@ -14,7 +14,28 @@ NES stands for Normalized Enrichment Score. A negative NES indicates that low le
 
 ## Installation
 
-AREA requires Python 3.9 or later. Install with pip:
+AREA requires Python 3.9 or later.
+
+### Setting up a virtual environment (SLURM supercomputer)
+
+If you are on a shared supercomputer with SLURM, create a dedicated virtual environment for AREA:
+
+```bash
+module load python/3.9.15
+mkdir -p ~/VENVs
+cd ~/VENVs
+python -m venv areavenv39
+source areavenv39/bin/activate
+pip install -r ~/AREA/requirements.txt
+```
+
+Activate this environment before each AREA run:
+
+```bash
+source ~/VENVs/areavenv39/bin/activate
+```
+
+### Install with pip
 
 ```bash
 cd AREA
