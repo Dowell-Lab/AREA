@@ -128,6 +128,13 @@ def main(argv=None):
     bool_df = pd.read_csv(args.boolean_file, index_col=0).reset_index()
     rank_df = pd.read_csv(args.rank_file, index_col=0).reset_index()
 
+    # Drop the spurious 'index' column created by reset_index() when the
+    # CSV has an unnamed first column (row numbers).  Keep it only if the
+    # user explicitly named it as the join column.
+    for df in (bool_df, rank_df):
+        if "index" in df.columns and args.join_column != "index":
+            df.drop(columns="index", inplace=True)
+
     # -- Sample keep-list -----------------------------------------------------
     if args.keep_samples is not None:
         keep_samples = pd.read_csv(args.keep_samples, header=None)[0].tolist()
