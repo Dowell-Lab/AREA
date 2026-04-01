@@ -16,7 +16,7 @@ echo "$dt"
 
 
 #turn on the virtual machine you are using if you are using one#
-path_to_venv=$HOME/VENVs/areavenv/
+path_to_venv=$HOME/VENVs/areavenv39/
 source $path_to_venv/bin/activate
 
 
