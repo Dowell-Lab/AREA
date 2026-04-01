@@ -15,27 +15,28 @@ echo "$dt"
 
 
 path_to_venv=$HOME
-#source $path_to_venv/gpu_python/bin/activate
 source $path_to_venv/psea_venv/bin/activate
 
 
 #set the paths to the files to load in
-path_to_area=$HOME
+path_to_area=$HOME/AREA/
 indir=$HOME/ChrisO/PSEA/AREA_fast/output/
-commoncolumn=Patient
-values_file=${indir}value_expression.csv
-bianary_attribute_file=${indir}comorbid_file.csv
+rank_file=${indir}value_expression.csv
+boolean_attribute_file=${indir}comorbid_file.csv
 outdirname=$HOME/outarea/initialareaCPU
 
 mkdir -p "$(dirname "$outdirname")"
 
-echo $values_file
-echo $bianary_attribute_file
+echo $rank_file
+echo $boolean_attribute_file
 echo $outdirname
 
-
-python3 ${path_to_area}/area_association/src/area_core.py -od $outdirname -cc $commoncolumn -vf $values_file -baf $bianary_attribute_file --processes 60
+python3 ${path_to_area}run_area.py \
+  -od $outdirname \
+  -jc Patient \
+  -rf $rank_file \
+  -bf $boolean_attribute_file \
+  -t 60
 
 dt=$(date '+%d/%m/%Y %H:%M:%S');
 echo "$dt"
-

@@ -6,7 +6,6 @@
 #SBATCH --ntasks=64
 #SBATCH --partition long
 #SBATCH --mem=500gb # Memory limit
-#SBATCH --time=100:00:00 # Time limit hrs:min:sec
 #SBATCH --time=90:00:00 # Time limit hrs:min:sec
 #SBATCH --output=/scratch/Users/allenma/eofiles/area_run.%j.out # Standard output
 #SBATCH --error=/scratch/Users/allenma/eofiles/area_run.%j.err # Standard error log
@@ -21,24 +20,29 @@ path_to_venv=$HOME/VENVs/areavenv/
 source $path_to_venv/bin/activate
 
 #set paths to AREA and to files to load in
-path_to_area=$HOME/AREA/src/
+path_to_area=$HOME/AREA/
 indir=/Shares/down/public/INLCUDE_2024/kallisto_20241030/selfannoated/
-commoncolumn=Participant
 rank_file=${indir}kallisto_200401lines_participants_normcounts.csv
-boolean_attribute_file=${indir}full_MONDO_binary_attribute.csv #change this
-outdirname=$HOME/area_runs/AREA_2025/outdir/
-include_rank_file_columns=${indir}include_rank_cols_minexp_1.csv
-include_boolean_file_columns=${indir}include_bool_cols_min_5_cT21_mondo.csv #change this
+boolean_attribute_file=${indir}full_MONDO_binary_attribute.csv
+outdirname=$HOME/area_runs/AREA_2026/outdir/
 outdirname_pre=${outdirname}all_minexp1_mincomobid5T21_MONDO
+
+include_rank_file_columns=${indir}include_rank_cols_minexp_1.csv
+include_boolean_file_columns=${indir}include_bool_cols_min_5_cT21_mondo.csv
 
 echo $rank_file
 echo $boolean_attribute_file
-echo $outdirname
-
 echo $outdirname_pre
 
-python3 ${path_to_area}AREA_core.py --verbose -od $outdirname_pre -cc $commoncolumn -rf $rank_file -baf $boolean_attribute_file --processes 4 --include_rank_file_columns $include_rank_file_columns --include_boolean_file_columns $include_boolean_file_columns
+python3 ${path_to_area}run_area.py \
+  --verbose \
+  -od $outdirname_pre \
+  -jc Participant \
+  -rf $rank_file \
+  -bf $boolean_attribute_file \
+  -t 4 \
+  --keep-rank-columns $include_rank_file_columns \
+  --keep-bool-columns $include_boolean_file_columns
 
 dt=$(date '+%d/%m/%Y %H:%M:%S');
 echo "$dt"
-

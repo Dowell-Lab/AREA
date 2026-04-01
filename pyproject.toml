@@ -1,0 +1,27 @@
+[build-system]
+requires = ["setuptools >= 68.0", "setuptools-scm"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "area"
+version = "0.1.0"
+description = "AREA — Association by Rank Enrichment Analysis"
+readme = "README.md"
+license = {text = "AGPL-3.0-or-later"}
+requires-python = ">=3.9"
+dependencies = [
+    "numpy",
+    "pandas",
+    "scipy",
+    "statsmodels",
+    "pyyaml",
+]
+
+[project.optional-dependencies]
+gpu = ["cupy"]
+
+[project.scripts]
+area = "area.cli:main"
+
+[tool.setuptools.packages.find]
+where = ["src"]

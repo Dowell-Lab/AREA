@@ -20,25 +20,30 @@ path_to_venv=$HOME
 source $path_to_venv/gpu_python/bin/activate
 
 #set paths to AREA and to files to load in
-path_to_area=$HOME/AREA/src/
+path_to_area=$HOME/AREA/
 indir=/Shares/down/public/INLCUDE_2024/kallisto_20241030/selfannoated/
-commoncolumn=Participant
 rank_file=${indir}kallisto_200401lines_participants_normcounts.csv
 boolean_attribute_file=${indir}full_HP_binary_attribute.csv
-outdirname=$HOME/area_runs/AREA_2025/outdir/
-include_rank_file_columns=${indir}include_rank_cols_minexp_1.csv
-include_boolean_file_columns=${indir}include_bool_cols_min_5_cT21_HP.csv
+outdirname=$HOME/area_runs/AREA_2026/outdir/
 outdirname_pre=${outdirname}all_minexp1_mincomobid5T21_HP_gpu
 
+include_rank_file_columns=${indir}include_rank_cols_minexp_1.csv
+include_boolean_file_columns=${indir}include_bool_cols_min_5_cT21_HP.csv
 
 echo $rank_file
 echo $boolean_attribute_file
-echo $outdirname
-
 echo $outdirname_pre
 
-python3 ${path_to_area}AREA_core.py --verbose -od $outdirname_pre -cc $commoncolumn -rf $rank_file -baf $boolean_attribute_file --processes 4 --include_rank_file_columns $include_rank_file_columns --include_boolean_file_columns $include_boolean_file_columns --gpu
+python3 ${path_to_area}run_area.py \
+  --verbose \
+  -od $outdirname_pre \
+  -jc Participant \
+  -rf $rank_file \
+  -bf $boolean_attribute_file \
+  -t 4 \
+  --keep-rank-columns $include_rank_file_columns \
+  --keep-bool-columns $include_boolean_file_columns \
+  --gpu
 
 dt=$(date '+%d/%m/%Y %H:%M:%S');
 echo "$dt"
-

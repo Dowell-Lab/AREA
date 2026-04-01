@@ -1,0 +1,49 @@
+# =============================================================================
+# AREA configuration file
+#
+# Every parameter that can be passed on the command line can be set here
+# instead.  Command-line flags always override values in this file.
+#
+# Usage:
+#   python -m area.cli --config area_config.yaml
+#   python -m area.cli --config area_config.yaml --verbose   # override one flag
+# =============================================================================
+
+# -- Required inputs ----------------------------------------------------------
+
+# CSV of binary attributes (samples × attributes).
+boolean_file: /path/to/bools.csv
+
+# CSV of continuous values (samples × features).
+rank_file: /path/to/ranks.csv
+
+# Column name shared between both input files (the sample identifier).
+join_column: sample_id
+
+# Directory for all output files (must already exist).
+out_dir: /path/to/results/
+
+# -- Performance --------------------------------------------------------------
+
+# Number of parallel threads (default: 4).
+threads: 4
+
+# Use GPU acceleration via CuPy (default: false).
+gpu: false
+
+# -- Optional filters ---------------------------------------------------------
+
+# Text file listing rank columns to include (one per line).
+# Omit or set to null to use all columns.
+keep_rank_columns: null
+
+# Text file listing bool columns to include (one per line).
+keep_bool_columns: null
+
+# Text file listing sample IDs to include (one per line).
+keep_samples: null
+
+# -- Diagnostics --------------------------------------------------------------
+
+# Print verbose diagnostic output (default: false).
+verbose: false

@@ -1,47 +1,55 @@
-from __future__ import annotations
-import importlib
+"""
+Array backend selection (CPU via NumPy, GPU via CuPy).
+
+Every module that needs array operations imports these helpers rather
+than choosing numpy/cupy on its own.
+"""
+
 import numpy as np
 
-#this script just handles the use_gpu flag. If its true we have to use cupy instead of numpy for a bunch of stuff. 
-#GPUs are only useful when you have lots of arrtibute vs bool comparisons 
+
+def load_array_backend(use_gpu: bool):
+    """Return the appropriate array library.
+
+    Parameters
+    ----------
+    use_gpu : bool
+        If True, import and return ``cupy``.  Otherwise return ``numpy``.
+
+    Returns
+    -------
+    module
+        ``numpy`` or ``cupy``.
+    """
+    if use_gpu:
+        import cupy
+        return cupy
+    return np
 
 
-def get_array_backend(use_gpu: bool = False):
-    if not use_gpu:
-        return np
+def to_numpy(value, use_gpu: bool):
+    """Move a scalar from GPU memory to a plain Python/NumPy value.
 
-    cupy_spec = importlib.util.find_spec("cupy")
-    if cupy_spec is None:
-        raise ImportError(
-            "GPU mode requested, but CuPy is not installed. "
-            "Install cupy or run with gpu=False."
-        )
+    Parameters
+    ----------
+    value
+        A numeric scalar (possibly a CuPy 0-d array).
+    use_gpu : bool
+        If True, call ``value.get()`` to transfer to CPU.
 
-    import cupy as cp
-    return cp
-
-
-def is_gpu_backend(xp) -> bool:
-    return xp.__name__ == "cupy"
+    Returns
+    -------
+    float or int
+    """
+    return value.get() if use_gpu else value
 
 
-def to_numpy(x, xp=None):
-    if x is None:
-        return None
-    if xp is not None and is_gpu_backend(xp):
-        return x.get() if hasattr(x, "get") else x
-    return np.asarray(x)
+def trapz(y, xp):
+    """Version-safe trapezoidal integration.
 
-
-def to_scalar(x, xp=None):
-    if x is None:
-        return None
-    if xp is not None and is_gpu_backend(xp):
-        x = x.get() if hasattr(x, "get") else x
-    if hasattr(x, "item"):
-        return x.item()
-    return x
-
-
-def as_xparray(x, xp):
-    return xp.array(x)
+    NumPy >= 2.0 renamed ``trapz`` to ``trapezoid``; CuPy may still
+    use the old name.
+    """
+    if hasattr(xp, "trapezoid"):
+        return xp.trapezoid(y)
+    return xp.trapz(y)

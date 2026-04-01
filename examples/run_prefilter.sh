@@ -18,7 +18,7 @@ outdir=$HOME/Ozeroff_scratch/ChrisO/AREA_git/chris_AREA/output/ptsd/Filtered/
 common_column_name=Participant
 values_file=${indir}geneexptpm.rank.csv
 binary_attribute_file=${indir}ptsd.boolean.csv
-prefilter_func=$HOME/Ozeroff_scratch/ChrisO/AREA_git/chris_AREA/src/
+prefilter_func=$HOME/AREA/pre_filter/
 
 #chr21 gene file path (needed for running only chr21 arguments)
 chr21_path=$HOME/down_public/INLCUDE_2024/kallisto_20241030/selfannoated/gene_id_no_version_chr21only.csv
@@ -77,12 +77,12 @@ if [ $? -eq 0 ]; then
     echo ""
     echo "=== NEXT STEPS ==="
     echo "Use these filtered dataframes with AREA:"
-    echo "python3 area_core.py \\"
-    echo "  -baf $filtered_binary_attribute_file \\"
-    echo "  -vf $filtered_values_file \\"
-    echo "  -cc $common_column_name \\"
+    echo "python3 \$HOME/AREA/run_area.py \\"
+    echo "  -bf $filtered_binary_attribute_file \\"
+    echo "  -rf $filtered_values_file \\"
+    echo "  -jc $common_column_name \\"
     echo "  -od your_area_output_dir/ \\"
-    echo "  --processes 60"
+    echo "  -t 60"
 else
     echo "Filtering failed at: $(date '+%Y-%m-%d %H:%M:%S')"
 fi
