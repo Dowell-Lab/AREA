@@ -18,7 +18,7 @@ dependencies = [
 ]
 
 [project.optional-dependencies]
-gpu = ["cupy"]
+gpu = ["cupy-cuda12x"]
 
 [project.scripts]
 area = "area.cli:main"
