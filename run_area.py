@@ -7,7 +7,7 @@ Usage:
     python run_area.py -bf bools.csv -rf ranks.csv -jc sample_id -od results/
 """
 
-from area.cli import main
+from src.cli import main
 
 if __name__ == "__main__":
     main()
