@@ -55,7 +55,8 @@ class TestBackend(unittest.TestCase):
         from area.backend import trapz
         y = np.array([0.0, 0.5, 1.0])
         result = trapz(y, np)
-        self.assertAlmostEqual(float(result), 0.5, places=5)
+        # Trapezoidal rule: (0+0.5)/2 * 1 + (0.5+1.0)/2 * 1 = 1.0
+        self.assertAlmostEqual(float(result), 1.0, places=5)
 
 
 # ===================================================================
