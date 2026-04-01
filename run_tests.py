@@ -13,7 +13,7 @@ import unittest
 
 if __name__ == "__main__":
     loader = unittest.TestLoader()
-    suite = loader.discover(start_dir="unittest", pattern="test_*.py")
+    suite = loader.discover(start_dir="tests", pattern="test_*.py")
 
     verbosity = 2 if "-v" in sys.argv or "--verbose" in sys.argv else 1
     runner = unittest.TextTestRunner(verbosity=verbosity)

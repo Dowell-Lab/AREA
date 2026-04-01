@@ -170,7 +170,7 @@ Often a user will not want to run all data through AREA. If a boolean attribute 
 
 ## Testing
 
-AREA includes a test suite in `unittest/test_area.py` that covers both unit tests and integration tests.
+AREA includes a test suite in `tests/test_area.py` that covers both unit tests and integration tests.
 
 ### Test data
 
@@ -215,7 +215,7 @@ AREA/
 ├── testdata/                # Test CSV files (not in repo)
 │   ├── genes.csv
 │   └── comorbid_file.csv
-├── unittest/                # Test suite
+├── tests/                   # Test suite
 │   └── test_area.py
 └── src/
     └── area/
