@@ -3,10 +3,10 @@
 #SBATCH --mail-type=NONE # Mail events (NONE, BEGIN, END, FAIL, ALL)
 #SBATCH --mail-user=allenma@colorado.edu # Where to send mail
 #SBATCH --nodes=1 # Run on a single node
-#SBATCH --ntasks=64
-#SBATCH --partition long
-#SBATCH --mem=500gb # Memory limit
-#SBATCH --time=90:00:00 # Time limit hrs:min:sec
+#SBATCH --ntasks=4
+#SBATCH --gres=gpu:1
+#SBATCH --partition=nvidia-a100
+#SBATCH --time=10:00:00 # Time limit hrs:min:sec
 #SBATCH --output=/scratch/Users/allenma/eofiles/area_run.%j.out # Standard output
 #SBATCH --error=/scratch/Users/allenma/eofiles/area_run.%j.err # Standard error log
 
@@ -25,7 +25,7 @@ indir=/Shares/down/public/INLCUDE_2024/kallisto_20241030/selfannoated/
 rank_file=${indir}kallisto_200401lines_participants_normcounts.csv
 boolean_attribute_file=${indir}full_MONDO_binary_attribute.csv
 outdirname=$HOME/area_runs/AREA_2026/outdir/
-outdirname_pre=${outdirname}all_minexp1_mincomobid5T21_MONDO
+outdirname_pre=${outdirname}all_minexp1_mincomobid5T21_MONDO_gpu
 
 include_rank_file_columns=${indir}include_rank_cols_minexp_1.csv
 include_boolean_file_columns=${indir}include_bool_cols_min_5_cT21_mondo.csv
@@ -40,9 +40,10 @@ python3 ${path_to_area}run_area.py \
   -jc Participant \
   -rf $rank_file \
   -bf $boolean_attribute_file \
-  -t 64 \
+  -t 4 \
   --keep-rank-columns $include_rank_file_columns \
-  --keep-bool-columns $include_boolean_file_columns
+  --keep-bool-columns $include_boolean_file_columns\
+  --gpu
 
 dt=$(date '+%d/%m/%Y %H:%M:%S');
 echo "$dt"
