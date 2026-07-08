@@ -174,8 +174,8 @@ def main(argv=None):
 
     # -- Cleanup intermediate files -------------------------------------------
     if not args.verbose:
-        plan_path = os.path.join(args.out_dir, plan_file)
-        raw_path = os.path.join(args.out_dir, plan_file + ".raw_pvalues.csv")
+        plan_path = args.out_dir+plan_file
+        raw_path = args.out_dir+plan_file + ".raw_pvalues.csv"
         for path in (plan_path, raw_path):
             if os.path.isfile(path):
                 os.remove(path)

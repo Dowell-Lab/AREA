@@ -1,5 +1,14 @@
-numpy
-pandas
-scipy
-statsmodels
-pyyaml
+-e git+ssh://git@github.com/Dowell-Lab/AREA.git@92f10bb30717200fb6fdcd98db2e1ce4fb40ecba#egg=area
+cupy-cuda12x==13.6.0
+fastrlock==0.8.3
+numpy==2.0.2
+packaging==26.0
+pandas==2.3.3
+patsy==1.0.2
+python-dateutil==2.9.0.post0
+pytz==2026.1.post1
+PyYAML==6.0.3
+scipy==1.13.1
+six==1.17.0
+statsmodels==0.14.6
+tzdata==2025.3

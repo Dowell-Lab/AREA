@@ -110,7 +110,7 @@ def compute_pvalues(out_dir, plan_file, join_column, rank_df, bool_df,
 
     Results are written to ``<out_dir>/<plan_file>.raw_pvalues.csv``.
     """
-    plan_path = os.path.join(out_dir, plan_file)
+    plan_path = out_dir+plan_file
     plan_df = pd.read_csv(plan_path)
     plan_df = plan_df[plan_df["plan"] == "run_area"]
 
@@ -139,6 +139,6 @@ def compute_pvalues(out_dir, plan_file, join_column, rank_df, bool_df,
             results.append(future.result())
 
     combined = pd.concat(results, ignore_index=True)
-    raw_path = os.path.join(out_dir, plan_file + ".raw_pvalues.csv")
+    raw_path = out_dir+plan_file + ".raw_pvalues.csv"
     combined.to_csv(raw_path, index=False)
     print("Done computing p-values.")

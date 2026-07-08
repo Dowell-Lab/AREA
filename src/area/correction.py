@@ -21,7 +21,7 @@ def compute_adjusted_pvalues(out_dir, plan_file):
 
     Rows whose p-value could not be parsed as numeric are dropped.
     """
-    raw_path = os.path.join(out_dir, plan_file + ".raw_pvalues.csv")
+    raw_path = out_dir+plan_file + ".raw_pvalues.csv"
     df = pd.read_csv(raw_path)
 
     # Coerce to numeric; rows that fail become NaN and are excluded
@@ -38,6 +38,6 @@ def compute_adjusted_pvalues(out_dir, plan_file):
     numeric_df = numeric_df.drop(columns=["pvalue_numeric"])
     numeric_df = numeric_df.sort_values("pvalue_bh")
 
-    out_path = os.path.join(out_dir, plan_file + ".adjusted_pvalues.csv")
+    out_path = out_dir+plan_file + ".adjusted_pvalues.csv"
     numeric_df.to_csv(out_path, index=False)
     print(f"Adjusted p-values written to {out_path}")

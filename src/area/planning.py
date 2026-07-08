@@ -68,7 +68,7 @@ def build_run_plan(out_dir, plan_file, join_column, rank_df, bool_df,
         print(f"Total pair count: {len(rank_columns) * len(bool_columns):,}")
 
     # Stream plan to disk
-    plan_path = os.path.join(out_dir, plan_file)
+    plan_path = out_dir + plan_file
     with open(plan_path, "w") as fh:
         fh.write("rank_column,bool_column,plan\n")
         for rank_col in rank_columns:
